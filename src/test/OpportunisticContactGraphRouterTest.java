@@ -29,7 +29,7 @@ public class OpportunisticContactGraphRouterTest extends ContactGraphRouterTest 
 				SimScenario.NROF_GROUPS_S, "1");
 		ts.putSetting(SimScenario.GROUP_NS + "." + 
 				core.SimScenario.NROF_HOSTS_S, "" + NROF_HOSTS);
-		ts.putSetting(Message.TTL_SECONDS_S, "true");
+		//ts.putSetting(Message.TTL_SECONDS_S, "true");
 		ts.putSetting(MessageRouter.MSG_TTL_S, "3600");
 		
 		// Primary network interface settings
