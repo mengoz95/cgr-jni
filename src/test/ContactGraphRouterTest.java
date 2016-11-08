@@ -15,7 +15,6 @@ import core.SimClock;
 import core.SimScenario;
 import routing.ContactGraphRouter;
 import routing.MessageRouter;
-import routing.PriorityContactGraphRouter.PriorityOutduct;
 import test.AbstractRouterTest;
 
 public class ContactGraphRouterTest extends AbstractRouterTest {

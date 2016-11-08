@@ -1,7 +1,5 @@
 package input;
 
-import java.io.IOException;
-
 import core.DTNHost;
 import core.Message;
 import core.PriorityMessage;
@@ -9,6 +7,10 @@ import core.World;
 
 public class PriorityMessageCreateEvent extends MessageCreateEvent 
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	/** Priority of the message (0..2) */
 	protected int priority;
 	protected int psize;
