@@ -80,7 +80,7 @@ public class PriorityEpidemicRouter extends ActiveRouter {
 		return oldest;		
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	protected List sortByQueueMode(List list) {	
 		Collections.sort(list, new Comparator() 

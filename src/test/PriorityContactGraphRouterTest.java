@@ -12,7 +12,6 @@ import core.NetworkInterface;
 import core.PriorityMessage;
 import core.SimClock;
 import core.SimScenario;
-import routing.ContactGraphRouter;
 import routing.MessageRouter;
 import routing.PriorityContactGraphRouter;
 import routing.PriorityContactGraphRouter.PriorityOutduct;
@@ -23,13 +22,11 @@ public class PriorityContactGraphRouterTest extends AbstractRouterTest{
 	private static final String CONTACT_PLAN_ASMS_FIG6 = "resources/contact_plan_ASMS14_2.txt";
 	
 	private static final int NROF_HOSTS = 6;
-	private PriorityContactGraphRouter r1,r2,r3,r4,r5,r6;
-	private static PriorityContactGraphRouterTest instance = null;
+	private PriorityContactGraphRouter r1,r2,r3,r4;
 	protected static final int TRANSMIT_SPEED = 16000;
 
 	@Override
 	public void setUp() throws Exception {
-		instance = this;
 		ts.putSetting(SimScenario.SCENARIO_NS + "." + 
 				SimScenario.NROF_GROUPS_S, "1");
 		ts.putSetting(SimScenario.GROUP_NS + "." + 
@@ -77,8 +74,6 @@ public class PriorityContactGraphRouterTest extends AbstractRouterTest{
 		r2 = (PriorityContactGraphRouter)h2.getRouter();
 		r3 = (PriorityContactGraphRouter)h3.getRouter();
 		r4 = (PriorityContactGraphRouter)h4.getRouter();
-		r5 = (PriorityContactGraphRouter)h5.getRouter();
-		r6 = (PriorityContactGraphRouter)h6.getRouter();
 	}
 	 
 	public void testASMS_fig4_allBulk()

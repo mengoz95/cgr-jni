@@ -7,14 +7,14 @@ class ContactPlanCreator {
   public static void main(String args[])
   throws IOException {
 	  
-	final String defaultPath = "/home/tab/workspace/one16/reports/default_scenario_EventLogReport.txt";
+	//final String defaultPath = "/home/tab/workspace/one16/reports/default_scenario_EventLogReport.txt";
     FileReader fr;
     String inputFilePath, outputPath;
     int datarate;
     BufferedReader br2 = new BufferedReader(new InputStreamReader(System.in));
     System.out.println("Insert the full path of the input file for the Contact Plan Creator\n");
     inputFilePath = br2.readLine();
-   // System.out.println("Insert the datarate for the Contact Plan, in B/s\n");
+    //System.out.println("Insert the datarate for the Contact Plan, in B/s\n");
     //datarate = Integer.parseInt(br2.readLine());
     fr = new FileReader(inputFilePath);
 	BufferedReader br = new BufferedReader(fr);
