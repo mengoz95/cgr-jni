@@ -122,13 +122,13 @@ public class PriorityContactGraphRouterTest extends AbstractRouterTest{
 		updateAllNodes();	
 		h2.forceConnection(h4, null, true);
 		h3.forceConnection(h4, null, true);
-		assertEquals(((PriorityOutduct)r1.getOutducts().get(h2)).getBulkQueue().size(), 8);
-		assertEquals(((PriorityOutduct)r1.getOutducts().get(h3)).getBulkQueue().size(), 8);
+		assertEquals(((PriorityOutduct)r1.getOutducts()[h2.getAddress()]).getBulkQueue().size(), 8);
+		assertEquals(((PriorityOutduct)r1.getOutducts()[h3.getAddress()]).getBulkQueue().size(), 8);
 		System.out.println("VIA H3");
-		for(Message m : ((PriorityOutduct)r1.getOutducts().get(h3)).getBulkQueue())
+		for(Message m : ((PriorityOutduct)r1.getOutducts()[h3.getAddress()]).getBulkQueue())
 			System.out.println(m.getId());
 		System.out.println("VIA H2");
-		for(Message m : ((PriorityOutduct)r1.getOutducts().get(h2)).getBulkQueue())
+		for(Message m : ((PriorityOutduct)r1.getOutducts()[h2.getAddress()]).getBulkQueue())
 			System.out.println(m.getId());
 		clock.advance(29);
 		
@@ -233,13 +233,13 @@ public class PriorityContactGraphRouterTest extends AbstractRouterTest{
 		updateAllNodes();	
 		h2.forceConnection(h4, TestUtilsForCGR.IFACE2_NS, true);
 		h3.forceConnection(h4, TestUtilsForCGR.IFACE2_NS, true);
-		assertEquals(((PriorityOutduct)r1.getOutducts().get(h2)).getBulkQueue().size(), 8);
-		assertEquals(((PriorityOutduct)r1.getOutducts().get(h3)).getBulkQueue().size(), 7);
+		assertEquals(((PriorityOutduct)r1.getOutducts()[h2.getAddress()]).getBulkQueue().size(), 8);
+		assertEquals(((PriorityOutduct)r1.getOutducts()[h3.getAddress()]).getBulkQueue().size(), 7);
 		System.out.println("VIA H3");
-		for(Message m : ((PriorityOutduct)r1.getOutducts().get(h3)).getBulkQueue())
+		for(Message m : ((PriorityOutduct)r1.getOutducts()[h3.getAddress()]).getBulkQueue())
 			System.out.println(m.getId());
 		System.out.println("VIA H2");
-		for(Message m : ((PriorityOutduct)r1.getOutducts().get(h2)).getBulkQueue())
+		for(Message m : ((PriorityOutduct)r1.getOutducts()[h2.getAddress()]).getBulkQueue())
 			System.out.println(m.getId());
 		
 		clock.advance(30);
@@ -373,10 +373,10 @@ public class PriorityContactGraphRouterTest extends AbstractRouterTest{
 		assertEquals(((PriorityOutduct)r1.getOutducts().get(h3)).getExpeditedQueue().size(), 4);*/
 		
 		System.out.println("VIA H3");
-		for(Message m : ((PriorityOutduct)r1.getOutducts().get(h3)).getBulkQueue())
+		for(Message m : ((PriorityOutduct)r1.getOutducts()[h3.getAddress()]).getBulkQueue())
 			System.out.println(m.getId());
 		System.out.println("VIA H2");
-		for(Message m : ((PriorityOutduct)r1.getOutducts().get(h2)).getBulkQueue())
+		for(Message m : ((PriorityOutduct)r1.getOutducts()[h2.getAddress()]).getBulkQueue())
 			System.out.println(m.getId());
 		
 		clock.advance(30);
@@ -463,21 +463,3 @@ public class PriorityContactGraphRouterTest extends AbstractRouterTest{
 		
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

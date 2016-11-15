@@ -15,7 +15,6 @@ import core.SimClock;
 import core.SimScenario;
 import routing.ContactGraphRouter;
 import routing.MessageRouter;
-import test.AbstractRouterTest;
 
 public class ContactGraphRouterTest extends AbstractRouterTest {
 
@@ -27,7 +26,7 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 	private static final String CONTACT_PLAN_ASMS_FIG6 = "resources/contact_plan_ASMS14_2.txt";
 
 	private static final int NROF_HOSTS = 6;
-	private ContactGraphRouter r1,r2,r3,r4,r5,r6;
+	protected ContactGraphRouter r1,r2,r3,r4,r5,r6;
 	private static ContactGraphRouterTest instance = null;
 	protected static final int TRANSMIT_SPEED = 16000;
 
@@ -51,7 +50,7 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		ts.putSetting(TestUtilsForCGR.IFACE2_NS + "." + 
 				NetworkInterface.TRANSMIT_RANGE_S, "1");
 		ts.putSetting(TestUtilsForCGR.IFACE2_NS + "." + 
-				NetworkInterface.TRANSMIT_SPEED_S, ""+TRANSMIT_SPEED*4);
+				NetworkInterface.TRANSMIT_SPEED_S, ""+TRANSMIT_SPEED/1000);
 		ContactGraphRouter routerProto = new ContactGraphRouter(ts);
 		setRouterProto(routerProto);
 		this.mc = new MessageChecker();
@@ -88,11 +87,15 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 	@Override
 	public void tearDown() throws Exception 
 	{
+		/*
 		for (DTNHost h : Utils.getAllNodes())
 		{
 			ContactGraphRouter r = (ContactGraphRouter) h.getRouter();
-			r.finalize();
+			r.finalizeCGR();
 		}
+		Libcgr.finalizeGlobalMem();
+		*/
+		ContactGraphRouter.reset();
 	}
 
 	/**
@@ -132,12 +135,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 
 		updateAllNodes();
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 1);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 1);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 1);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 1);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 1);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 1);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 1);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 1);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 1);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 1);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 1);
 
 		clock.advance(11);
 		h1.forceConnection(h2, null, true);
@@ -153,12 +156,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 			updateAllNodes();
 		}
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 0);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 0);	
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 0);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 0);	
 
 		assertEquals(true, r2.isDeliveredMessage(m1));
 
@@ -245,12 +248,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 
 		updateAllNodes();
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 1);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 1);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 1);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 1);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 1);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 1);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 1);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 1);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 1);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 1);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 1);
 		//1st round, contact 10-30
 		clock.advance(10);
 		h1.forceConnection(h2, null, true);
@@ -266,12 +269,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h1);
 		disconnect(h2);		
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 2);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 1);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 1);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 1);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 1);	
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 2);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 1);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 1);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 1);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 1);	
 
 		//no message delivered, 1st deliver h3 no contact available
 
@@ -293,12 +296,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h2);
 		disconnect(h3);		
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 2);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 1);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 1);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 2);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 1);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 1);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 1);
 
 		//m1 delivered  
 		assertEquals(true, r3.isDeliveredMessage(m1));
@@ -322,12 +325,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h3);
 		disconnect(h4);		
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 2);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 1);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 2);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 1);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 1);
 
 		//m2 delivered
 
@@ -352,12 +355,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h4);
 		disconnect(h5);		
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 2);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 2);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 1);
 
 		//m3 delivered
 		assertEquals(true, r5.isDeliveredMessage(m3));
@@ -381,12 +384,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h5);
 		disconnect(h6);
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 0);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 0);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 1);
 
 		//m4 delivered
 		assertEquals(true, r6.isDeliveredMessage(m4));
@@ -412,12 +415,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h1);
 		disconnect(h6);
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 0);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 0);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 0);
 
 		//m6 delivered
 		assertEquals(true, r1.isDeliveredMessage(m6));
@@ -457,9 +460,9 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 
 		updateAllNodes();
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 2);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 1);
-		assertEquals(r2.getOutducts().get(h4).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 2);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 1);
+		assertEquals(r2.getOutducts()[h4.getAddress()].getQueue().size(), 1);
 		assertTrue(r4.isMessageIntoLimbo(m6));
 		System.out.println("\nMessage "+m6+"in r4 limbo: no routes available for its destination\n");
 		assertTrue(r5.isMessageIntoLimbo(m5));
@@ -484,10 +487,10 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h2);
 		disconnect(h3);
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h4).getQueue().size(), 3);
-		assertEquals(r3.getOutducts().get(h5).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h4.getAddress()].getQueue().size(), 3);
+		assertEquals(r3.getOutducts()[h5.getAddress()].getQueue().size(), 1);
 		assertTrue(r4.isMessageIntoLimbo(m6));
 		System.out.println("\nMessage "+m6+" in r4 limbo: no routes available for its destination\n");
 		assertTrue(r5.isMessageIntoLimbo(m5));
@@ -530,11 +533,11 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h2);
 		disconnect(h4);
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h4).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h6).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h4.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h6.getAddress()].getQueue().size(), 1);
 		assertTrue(r4.isMessageIntoLimbo(m6));
 		System.out.println("\nMessage "+m6+" in r4 limbo: no routes available for its destination\n");
 		assertTrue(r5.isMessageIntoLimbo(m5));
@@ -565,11 +568,11 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h6);
 
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h4).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h6).getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h4.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h6.getAddress()].getQueue().size(), 0);
 		assertTrue(r4.isMessageIntoLimbo(m6));
 		System.out.println("\nMessage "+m6+" in r4 limbo: no routes available for its destination\n");
 		assertTrue(r5.isMessageIntoLimbo(m5));
@@ -828,12 +831,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		updateAllNodes();
 
 		// check if messages have been enqueued into the right outducts
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 1);
-		assertEquals(r2.getOutducts().get(h3).getQueue().size(), 1);
-		assertEquals(r3.getOutducts().get(h4).getQueue().size(), 1);
-		assertEquals(r4.getOutducts().get(h5).getQueue().size(), 1);
-		assertEquals(r5.getOutducts().get(h6).getQueue().size(), 1);
-		assertEquals(r6.getOutducts().get(h1).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 1);
+		assertEquals(r2.getOutducts()[h3.getAddress()].getQueue().size(), 1);
+		assertEquals(r3.getOutducts()[h4.getAddress()].getQueue().size(), 1);
+		assertEquals(r4.getOutducts()[h5.getAddress()].getQueue().size(), 1);
+		assertEquals(r5.getOutducts()[h6.getAddress()].getQueue().size(), 1);
+		assertEquals(r6.getOutducts()[h1.getAddress()].getQueue().size(), 1);
 
 		// nothing happen, fast forward to the end of the presumed contact
 		clock.advance(3601);
@@ -893,10 +896,10 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 
 		updateAllNodes();
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 3);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 1);
-		assertEquals(r2.getOutducts().get(h1).getQueue().size(), 1);
-		assertEquals(r3.getOutducts().get(h1).getQueue().size(), 1);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 3);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 1);
+		assertEquals(r2.getOutducts()[h1.getAddress()].getQueue().size(), 1);
+		assertEquals(r3.getOutducts()[h1.getAddress()].getQueue().size(), 1);
 
 		clock.advance(10);
 		//1st round contacts 10-30
@@ -916,12 +919,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h2);
 		disconnect(h3);
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h5).getQueue().size(), 2);
-		assertEquals(r2.getOutducts().get(h4).getQueue().size(), 4);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h5.getAddress()].getQueue().size(), 2);
+		assertEquals(r2.getOutducts()[h4.getAddress()].getQueue().size(), 4);
 
 		//no messages delivered
 		//2nd round contacts 40-70 and 50-80
@@ -961,12 +964,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h5);
 
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h6).getQueue().size(), 4);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h6.getAddress()].getQueue().size(), 4);
 
 		assertEquals(true, r5.isDeliveredMessage(m6));
 		assertEquals(true, r5.isDeliveredMessage(m4));
@@ -988,12 +991,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h6);
 		disconnect(h4);
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h6).getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h6.getAddress()].getQueue().size(), 0);
 
 		assertEquals(true, r6.isDeliveredMessage(m1));
 		assertEquals(true, r6.isDeliveredMessage(m2));
@@ -1017,12 +1020,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h6);
 		disconnect(h5);
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h6).getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h6.getAddress()].getQueue().size(), 0);
 
 
 		for (int i = 0; i < 30; i++)
@@ -1042,12 +1045,12 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		disconnect(h5);
 		disconnect(h2);
 
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 0);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r2.getOutducts().get(h1).getQueue().size(), 0);
-		assertEquals(r3.getOutducts().get(h5).getQueue().size(), 0);
-		assertEquals(r4.getOutducts().get(h6).getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 0);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r2.getOutducts()[h1.getAddress()].getQueue().size(), 0);
+		assertEquals(r3.getOutducts()[h5.getAddress()].getQueue().size(), 0);
+		assertEquals(r4.getOutducts()[h6.getAddress()].getQueue().size(), 0);
 
 	}
 
@@ -1089,7 +1092,7 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		// useless assert. I just want to see how the memory is doing
 		assertEquals("VACAGHER", "VACAGHER");
 	}
-	
+
 	/**
 	 * TEST 9
 	 * ASMS
@@ -1142,8 +1145,8 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		updateAllNodes();	
 		h2.forceConnection(h4, null, true);
 		h3.forceConnection(h4, null, true);
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 8);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 8);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 8);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 8);
 				
 		clock.advance(29);
 		
@@ -1243,30 +1246,23 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 		h1.createNewMessage(m13);
 		Message m14 = new Message(h1,h4, "Messaggio 14", 100000);
 		h1.createNewMessage(m14);
-		Message m15 = new Message(h1,h4, "Messaggio 15", 100000);
-		h1.createNewMessage(m15);
+		//Message m15 = new Message(h1,h4, "Messaggio 15", 100000);
+		//h1.createNewMessage(m15);
 		//Message m16 = new Message(h1,h4, "Messaggio 16", 100000);
 		//h1.createNewMessage(m16);
 		
 
-		checkCreates(15);
+		checkCreates(14);
 		
 		updateAllNodes();	
-		System.out.println(r1.getOutducts().get(h2).getQueue().size());
-		System.out.println("VIA H3");
-		for(Message m : (r1.getOutducts().get(h3)).getQueue())
-			System.out.println(m.getId());
-		System.out.println("VIA H2");
-		for(Message m : (r1.getOutducts().get(h2)).getQueue())
-			System.out.println(m.getId());
-		h2.forceConnection(h4, TestUtilsForCGR.IFACE2_NS, true);
-		h3.forceConnection(h4, TestUtilsForCGR.IFACE2_NS, true);
-		assertEquals(r1.getOutducts().get(h2).getQueue().size(), 8);
-		assertEquals(r1.getOutducts().get(h3).getQueue().size(), 7);
+		h2.forceConnection(h4, null, true);
+		h3.forceConnection(h4, null, true);
+		assertEquals(r1.getOutducts()[h2.getAddress()].getQueue().size(), 3);
+		assertEquals(r1.getOutducts()[h3.getAddress()].getQueue().size(), 11);
 				
 		clock.advance(30);
 		
-		h1.forceConnection(h3, TestUtilsForCGR.IFACE1_NS, true);
+		h1.forceConnection(h3, null, true);
 		updateAllNodes();
 		
 		for (int i = 0; i < 120; i++)
@@ -1275,23 +1271,15 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 			clock.advance(0.25);
 		}	
 		
-		h1.forceConnection(h2, TestUtilsForCGR.IFACE2_NS, true);
+		h1.forceConnection(h2, null, true);
 				
-		for (int i = 0; i < 80; i++)
+		for (int i = 0; i < 60; i++)
 		{
 			updateAllNodes();
 			clock.advance(0.25);
 		}	
 		
-		h1.forceConnection(h2, TestUtilsForCGR.IFACE2_NS, false);
-		
-		for (int i = 0; i < 40; i++)
-		{
-			updateAllNodes();
-			clock.advance(0.25);
-		}	
-		
-		h1.forceConnection(h3, TestUtilsForCGR.IFACE1_NS, false);
+		h1.forceConnection(h2, null, false);
 		
 		for (int i = 0; i < 60; i++)
 		{
@@ -1299,7 +1287,15 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 			clock.advance(0.25);
 		}	
 		
-		h1.forceConnection(h3, TestUtilsForCGR.IFACE1_NS, true);
+		h1.forceConnection(h3, null, false);
+		
+		for (int i = 0; i < 60; i++)
+		{
+			updateAllNodes();
+			clock.advance(0.25);
+		}	
+		
+		h1.forceConnection(h3, null, true);
 		
 		for (int i = 0; i < 120; i++)
 		{
@@ -1307,7 +1303,7 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 			clock.advance(0.25);
 		}	
 		
-		h1.forceConnection(h3, TestUtilsForCGR.IFACE1_NS, false);
+		h1.forceConnection(h3, null, false);
 		
 		
 		disconnect(h1);
@@ -1345,7 +1341,7 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 	
 		assertEquals(true, r4.isDeliveredMessage(m14));
 		
-		assertEquals(true, r4.isDeliveredMessage(m15));
+		//assertEquals(true, r4.isDeliveredMessage(m15));
 	
 		//assertEquals(true, r4.isDeliveredMessage(m16));
 		
@@ -1353,8 +1349,16 @@ public class ContactGraphRouterTest extends AbstractRouterTest {
 				
 	
 	}
-		
-		
+	
+	protected void testWait(double sec, double gran)
+	{
+		sec = sec / gran;
+		for (int i = 0; i < sec; i++)
+		{
+			clock.advance(gran);
+			updateAllNodes();
+		}
+	}
 				
 	
 	public static ContactGraphRouterTest getInstance()
