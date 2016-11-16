@@ -8,12 +8,11 @@
 #ifndef JNI_INCLUDE_INIT_GLOBAL_H_
 #define JNI_INCLUDE_INIT_GLOBAL_H_
 
-#include <pthread.h>
 #include <time.h>
 
 #define ONEClockClass "core/SimClock"
 
-void init_global();
+int init_global();
 void finalize_global();
 void init_node();
 void destroy_node();

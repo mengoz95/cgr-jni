@@ -12,46 +12,162 @@
 #include "rfx.h"
 #include "shared.h"
 #include "init_global.h"
+#include "jni_thread.h"
+#include <pthread.h>
 
-#define WM_PSM_PARTITION 0
-#define SDR_PSM_PARTITION 1
+#define PsmPartitionManagerClass "cgr_jni/psm/PsmPartitionManager"
+
+pthread_key_t ionPartitions_key = -1;
+typedef struct
+{
+	PsmPartition partition[2];
+	uvast nodeNbr;
+} IonPartitions;
+
+static IonPartitions * setIonPartitions(IonPartitions * ionPartitions)
+{
+	if ((pthread_getspecific(ionPartitions_key)) == NULL)
+	{
+		pthread_setspecific(ionPartitions_key, ionPartitions);
+	}
+	return ionPartitions;
+}
+static IonPartitions * getIonPartitions()
+{
+	IonPartitions * ionP;
+	ionP = pthread_getspecific(ionPartitions_key);
+	if (ionP == NULL)
+	{
+		ionP = malloc(sizeof(IonPartitions));
+		memset(ionP, 0, sizeof(IonPartitions));
+		setIonPartitions(ionP);
+	}
+/*	char buf[256];
+	sprintf(buf, "nodeNum = %d\nionPartition_key = %lu\nionPartition = %lx\n",
+			getNodeNum(), ionPartitions_key, ionP);
+	writeMemo(buf);
+	*/return ionP;
+}
+static IonPartitions * initIonPartitions()
+{
+	IonPartitions * ionP = NULL;
+	if (ionPartitions_key == -1)
+		pthread_key_create(&ionPartitions_key, NULL);
+	else
+		ionP = getIonPartitions();
+	if (ionP == NULL)
+	{
+		ionP = malloc(sizeof(IonPartitions));
+		memset(ionP, 0, sizeof(IonPartitions));
+		setIonPartitions(ionP);
+	}
+	return ionP;
+}
+static IonPartitions * updateIonPartitions()
+{
+	JNIEnv * jniEnv = getThreadLocalEnv();
+	IonPartitions * ionP = getIonPartitions();
+	if (ionP == NULL)
+	{
+		putErrmsg("Cannot retrieve ion partitions", NULL);
+		return NULL;
+	}
+	if (ionP->nodeNbr != getNodeNum())
+	{
+		ionP->nodeNbr = getNodeNum();
+		(*jniEnv)->DeleteGlobalRef(jniEnv, ionP->partition[WM_PSM_PARTITION]);
+		(*jniEnv)->DeleteGlobalRef(jniEnv, ionP->partition[SDR_PSM_PARTITION]);
+		ionP->partition[WM_PSM_PARTITION] =
+				(*jniEnv)->NewGlobalRef(jniEnv,
+				getIonPsmPartition(ionP->nodeNbr, WM_PSM_PARTITION));
+		ionP->partition[SDR_PSM_PARTITION] =
+				(*jniEnv)->NewGlobalRef(jniEnv,
+				getIonPsmPartition(ionP->nodeNbr, SDR_PSM_PARTITION));
+		setIonPartitions(ionP);
+	}
+	return ionP;
+}
+void destroyIonPartitions()
+{
+	JNIEnv * jniEnv = getThreadLocalEnv();
+	IonPartitions * ionP = getIonPartitions();
+	(*jniEnv)->DeleteGlobalRef(jniEnv, ionP->partition[WM_PSM_PARTITION]);
+	(*jniEnv)->DeleteGlobalRef(jniEnv, ionP->partition[SDR_PSM_PARTITION]);
+	free(ionP);
+	pthread_key_delete(ionPartitions_key);
+	ionPartitions_key = -1;
+}
 
 char * getIonvdbName();
 
 PsmPartition getIonPsmPartition(long nodeNum, int partNum)
 {
+	//cached for optimization
+	static jclass psmPartitionManagerClass = 0;
+	static jmethodID method = 0;
 	JNIEnv * jniEnv = getThreadLocalEnv();
-	jclass psmPartitionManagerClass = (*jniEnv)->FindClass(jniEnv, PsmPartitionManagerClass);
-	jmethodID method = (*jniEnv)->GetStaticMethodID(jniEnv, psmPartitionManagerClass, "getPartition","(JI)Lcgr_jni/psm/PsmPartition;");
-	jobject partition = (*jniEnv)->CallStaticObjectMethod(jniEnv, psmPartitionManagerClass, method, nodeNum, partNum);
+	if (method == 0)
+	{
+		psmPartitionManagerClass =
+				(*jniEnv)->FindClass(jniEnv, PsmPartitionManagerClass);
+		method =
+				(*jniEnv)->GetStaticMethodID(jniEnv, psmPartitionManagerClass,
+						"getPartition","(JI)Lcgr_jni/psm/PsmPartition;");
+	}
+	jobject partition =
+			(*jniEnv)->CallStaticObjectMethod(jniEnv,
+					psmPartitionManagerClass, method, nodeNum, partNum);
 	if (partition == NULL)
 	{
-		method = (*jniEnv)->GetStaticMethodID(jniEnv, psmPartitionManagerClass, "newPartition","(JI)Lcgr_jni/psm/PsmPartition;");
-		partition = (*jniEnv)->CallStaticObjectMethod(jniEnv, psmPartitionManagerClass, method, nodeNum, partNum);
+		method = (*jniEnv)->GetStaticMethodID(jniEnv,
+				psmPartitionManagerClass, "newPartition",
+				"(JI)Lcgr_jni/psm/PsmPartition;");
+		partition = (*jniEnv)->CallStaticObjectMethod(jniEnv,
+				psmPartitionManagerClass, method, nodeNum, partNum);
 	}
 	return (PsmPartition) partition;
 }
 
 PsmPartition newIonPsmPartition(long nodeNum, int partNum)
 {
+	//cached for optimization
+	static jclass psmPartitionManagerClass = 0;
+	static jmethodID method = 0;
 	JNIEnv * jniEnv = getThreadLocalEnv();
-	jclass psmPartitionManagerClass = (*jniEnv)->FindClass(jniEnv, PsmPartitionManagerClass);
-	jmethodID method = (*jniEnv)->GetStaticMethodID(jniEnv, psmPartitionManagerClass, "newPartition","(JI)Lcgr_jni/psm/PsmPartition;");
-	jobject partition = (*jniEnv)->CallStaticObjectMethod(jniEnv, psmPartitionManagerClass, method, nodeNum, partNum);
+	if (method == 0)
+	{
+		psmPartitionManagerClass =
+				(*jniEnv)->FindClass(jniEnv, PsmPartitionManagerClass);
+		method = (*jniEnv)->GetStaticMethodID(jniEnv,
+				psmPartitionManagerClass, "newPartition",
+				"(JI)Lcgr_jni/psm/PsmPartition;");
+	}
+	jobject partition = (*jniEnv)->CallStaticObjectMethod(jniEnv,
+			psmPartitionManagerClass, method, nodeNum, partNum);
 	return (PsmPartition) partition;
 }
 
 void eraseIonPsmPartition(long nodeNum, int partNum)
 {
+	//cached for optimization
+	static jclass psmPartitionManagerClass = 0;
+	static jmethodID method = 0;
 	JNIEnv * jniEnv = getThreadLocalEnv();
-	jclass psmPartitionManagerClass = (*jniEnv)->FindClass(jniEnv, PsmPartitionManagerClass);
-	jmethodID method = (*jniEnv)->GetStaticMethodID(jniEnv, psmPartitionManagerClass, "erasePartition","(JI)V");
-	(*jniEnv)->CallStaticVoidMethod(jniEnv, psmPartitionManagerClass, method, nodeNum, partNum);
+	if (method == 0)
+	{
+		psmPartitionManagerClass =
+				(*jniEnv)->FindClass(jniEnv, PsmPartitionManagerClass);
+		method = (*jniEnv)->GetStaticMethodID(jniEnv,
+				psmPartitionManagerClass, "erasePartition","(JI)V");
+	}
+	(*jniEnv)->CallStaticVoidMethod(jniEnv, psmPartitionManagerClass,
+			method, nodeNum, partNum);
 }
 
 void initIonWm()
 {
 	newIonPsmPartition(getNodeNum(), WM_PSM_PARTITION);
+	initIonPartitions();
 }
 void destroyIonWm()
 {
@@ -59,12 +175,14 @@ void destroyIonWm()
 }
 PsmPartition getIonWm()
 {
-	return getIonPsmPartition(getNodeNum(), WM_PSM_PARTITION);
+	//return getIonPsmPartition(getNodeNum(), WM_PSM_PARTITION);
+	return updateIonPartitions()->partition[WM_PSM_PARTITION];
 }
 
 void initIonSdr()
 {
 	newIonPsmPartition(getNodeNum(), SDR_PSM_PARTITION);
+	initIonPartitions();
 }
 void destroyIonSdr()
 {
@@ -72,7 +190,8 @@ void destroyIonSdr()
 }
 Sdr	getIonSdr()
 {
-	return getIonPsmPartition(getNodeNum(), SDR_PSM_PARTITION);
+	//return getIonPsmPartition(getNodeNum(), SDR_PSM_PARTITION);
+	return updateIonPartitions()->partition[SDR_PSM_PARTITION];
 }
 
 IonDB * createIonDb(Sdr ionsdr, IonDB * iondbPtr)
@@ -101,7 +220,10 @@ IonDB * createIonDb(Sdr ionsdr, IonDB * iondbPtr)
 	iondbPtr->ranges = sdr_list_create(ionsdr);
 	iondbPtr->maxClockError = 0;
 	iondbPtr->clockIsSynchronized = 1;
+	iondbPtr->contactLog[SENDER_NODE] = sdr_list_create(ionsdr);
+	iondbPtr->contactLog[RECEIVER_NODE] = sdr_list_create(ionsdr);
     //memcpy(&iondbBuf.parmcopy, parms, sizeof(IonParms));
+	//fprintf(stderr, "ionDb created: %d\n", getOwnNodeNbr());
 	return iondbPtr;
 }
 
@@ -117,6 +239,7 @@ void destroyIonDb(char *iondbName)
 	sdr_list_destroy(sdr, iondbBuf.contacts, NULL, NULL);
 	sdr_list_destroy(sdr, iondbBuf.ranges, NULL, NULL);
 	sdr_free(sdr, iondbObj);
+	//fprintf(stderr, "ionDb destroyed: %d\n", getOwnNodeNbr());
 }
 
 IonVdb * createIonVdb(char * ionvdbName)
@@ -179,6 +302,7 @@ IonVdb * createIonVdb(char * ionvdbName)
 	vdb->deltaFromUTC = iondb.deltaFromUTC;
 	sdr_exit_xn(sdr);	/*	Unlock memory.		*/
 
+	//fprintf(stderr, "ionVdb created: %d\n", getOwnNodeNbr());
 	return vdb;
 }
 
@@ -266,5 +390,5 @@ static void	ionDropVdb(char * vdbName)
 void destroyIonVdb(char * ionvdbName)
 {
 	ionDropVdb(ionvdbName);
+	//fprintf(stderr, "ionVdb destroyed: %d\n", getOwnNodeNbr());
 }
-

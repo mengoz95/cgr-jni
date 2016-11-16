@@ -7,11 +7,13 @@
 
 
 #include "init_global.h"
+#include "jni_thread.h"
 #include "shared.h"
 
 #include <pthread.h>
 #include <time.h>
 #include <jni.h>
+#include <locale.h>
 
 #include "psm.h"
 #include "utils.h"
@@ -19,28 +21,35 @@
 #define WM_PSM_PARTITION 0
 #define SDR_PSM_PARTITION 1
 
+JavaVM *javaVM = NULL;
 static time_t ONEreferenceTime = 0;
 pthread_key_t nodeNum_key;
 pthread_key_t jniEnv_key;
-//int initialized = 0;
+int initialized = 0;
 
 
 
-void init_global()
+int init_global()
 {
 	if (initialized == 0)
 	{
+		setlocale(LC_ALL, "en_US.UTF-8");
 		pthread_key_create(&nodeNum_key, NULL);
 		pthread_key_create(&jniEnv_key, NULL);
+		pthread_key_create(&interfaceInfo_key, NULL);
 		ONEreferenceTime = time(NULL);
 		initialized = 1;
+		return 1;
 	}
+	return 0;
 }
 
 void finalize_global()
 {
+	destroyIonPartitions();
 	pthread_key_delete(nodeNum_key);
 	pthread_key_delete(jniEnv_key);
+	pthread_key_delete(interfaceInfo_key);
 	initialized = 0;
 }
 

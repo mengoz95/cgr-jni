@@ -4,11 +4,14 @@ import routing.ContactGraphRouter;
 import routing.OpportunisticContactGraphRouter;
 import routing.ContactGraphRouter.MessageStatus;
 import routing.ContactGraphRouter.Outduct;
+import routing.PriorityContactGraphRouter;
+import routing.PriorityContactGraphRouter.PriorityOutduct;
 
 import java.util.HashSet;
 
 import core.DTNHost;
 import core.Message;
+import core.PriorityMessage;
 
 public class IONInterface {	
 	
@@ -186,4 +189,55 @@ public class IONInterface {
 		localRouter.addDiscoveryInfo(fromNode, toNode, fromTime, 
 				toTime, xmitSpeed);
 	}
+	
+	/*
+	 * METHODS USED BY PRIORITY CGR
+	 */
+	
+	static int getMessagePriority(Message message)
+	{
+		if(message instanceof PriorityMessage)
+			return ((PriorityMessage)message).getPriority();
+		
+		return 1;
+	}
+	
+	static long getOutductBulkBacklog(Outduct jOuduct)
+	{
+		if(jOuduct instanceof PriorityOutduct)
+			return((PriorityOutduct) jOuduct).getBulkBacklog();
+		
+		return 0;
+	}
+	
+	static long getOutductNormalBacklog(Outduct jOuduct)
+	{
+		if(jOuduct instanceof PriorityOutduct)
+			return((PriorityOutduct) jOuduct).getNormalBacklog();
+		
+		return jOuduct.getTotalEnqueuedBytes();
+	}
+	
+	static long getOutductExpeditedBacklog(Outduct jOuduct)
+	{
+		if(jOuduct instanceof PriorityOutduct)
+			return((PriorityOutduct) jOuduct).getExpeditedBacklog();
+		
+		return 0;
+	}
+	
+	static int manageOverbooking(long localNodeNbr, long proximateNodeNbr, double overbooked, double protect)
+	{
+		DTNHost local = getNodeFromNbr(localNodeNbr);
+		DTNHost to = getNodeFromNbr(proximateNodeNbr);
+		PriorityContactGraphRouter localRouter;
+		if(local.getRouter() instanceof PriorityContactGraphRouter)
+		{
+			localRouter = (PriorityContactGraphRouter)local.getRouter();
+			localRouter.setManageOverbooking(to,overbooked,protect);
+		}
+		
+		return 0;
+	}
+	
 }
