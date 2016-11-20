@@ -21,6 +21,8 @@
 
 #define	MAX_TIME	((unsigned int) ((1U << 31) - 1))
 
+#define	CGRVDB_NAME	"cgrvdb"
+
 #ifdef	ION_BANDWIDTH_RESERVED
 #define	MANAGE_OVERBOOKING	0
 #endif
@@ -28,8 +30,6 @@
 #ifndef	MANAGE_OVERBOOKING
 #define	MANAGE_OVERBOOKING	1
 #endif
-
-
 
 /*		Perform a trace if a trace callback exists.		*/
 #define TRACE(...) do \
@@ -58,6 +58,7 @@ typedef struct
 
 	/*	Details of the route.					*/
 
+	float		arrivalConfidence;
 	time_t		arrivalTime;	/*	As from time(2).	*/
 	PsmAddress	hops;		/*	SM list: IonCXref addr	*/
 	uvast		maxCapacity;
@@ -90,7 +91,8 @@ typedef struct
 	uvast		neighborNodeNbr;
 	FwdDirective	directive;
 	time_t		forfeitTime;
-	time_t		arrivalTime;
+	float		arrivalConfidence;
+	time_t		arrivalTime;	/*	As from time(2).	*/
 	Scalar		overbooked;	/*	Bytes needing reforward.*/
 	Scalar		protected;	/*	Bytes not overbooked.	*/
 	int		hopCount;	/*	# hops from dest. node.	*/
@@ -194,63 +196,53 @@ static void	clearRoutingObjects(PsmPartition ionwm)
 	}
 }
 
-static CgrVdb	*_cgrvdb(char **name)
+static CgrVdb	*getCgrVcb()
 {
-	static CgrVdb	*vdb = NULL;
-	PsmPartition	ionwm;
+	static char	*name = CGRVDB_NAME;
+	PsmPartition	ionwm = getIonwm();
 	PsmAddress	vdbAddress;
 	PsmAddress	elt;
+	CgrVdb		*vdb;
 	Sdr		sdr;
 
-	if (name)
+	/*	Attaching to volatile database.				*/
+
+	if (psm_locate(ionwm, name, &vdbAddress, &elt) < 0)
 	{
-		if (*name == NULL)	/*	Terminating.		*/
-		{
-			vdb = NULL;
-			return vdb;
-		}
-
-		/*	Attaching to volatile database.			*/
-
-		ionwm = getIonwm();
-		if (psm_locate(ionwm, *name, &vdbAddress, &elt) < 0)
-		{
-			putErrmsg("Failed searching for vdb.", *name);
-			return NULL;
-		}
-
-		if (elt)
-		{
-			vdb = (CgrVdb *) psp(ionwm, vdbAddress);
-			return vdb;
-		}
-
-		/*	CGR volatile database doesn't exist yet.	*/
-
-		sdr = getIonsdr();
-		CHKNULL(sdr_begin_xn(sdr));	/*	To lock memory.	*/
-		vdbAddress = psm_zalloc(ionwm, sizeof(CgrVdb));
-		if (vdbAddress == 0)
-		{
-			sdr_exit_xn(sdr);
-			putErrmsg("No space for volatile database.", *name);
-			return NULL;
-		}
-
-		vdb = (CgrVdb *) psp(ionwm, vdbAddress);
-		memset((char *) vdb, 0, sizeof(CgrVdb));
-		if ((vdb->routeLists = sm_list_create(ionwm)) == 0
-		|| psm_catlg(ionwm, *name, vdbAddress) < 0)
-		{
-			sdr_exit_xn(sdr);
-			putErrmsg("Can't initialize volatile database.", *name);
-			return NULL;
-		}
-
-		clearRoutingObjects(ionwm);
-		sdr_exit_xn(sdr);
+		putErrmsg("Failed searching for vdb.", name);
+		return NULL;
 	}
 
+	if (elt)
+	{
+		vdb = (CgrVdb *) psp(ionwm, vdbAddress);
+		return vdb;
+	}
+
+	/*	CGR volatile database doesn't exist yet.		*/
+
+	sdr = getIonsdr();
+	CHKNULL(sdr_begin_xn(sdr));	/*	To lock memory.		*/
+	vdbAddress = psm_zalloc(ionwm, sizeof(CgrVdb));
+	if (vdbAddress == 0)
+	{
+		sdr_exit_xn(sdr);
+		putErrmsg("No space for CGR volatile database.", name);
+		return NULL;
+	}
+
+	vdb = (CgrVdb *) psp(ionwm, vdbAddress);
+	memset((char *) vdb, 0, sizeof(CgrVdb));
+	if ((vdb->routeLists = sm_list_create(ionwm)) == 0
+	|| psm_catlg(ionwm, name, vdbAddress) < 0)
+	{
+		sdr_exit_xn(sdr);
+		putErrmsg("Can't initialize CGR volatile database.", name);
+		return NULL;
+	}
+
+	clearRoutingObjects(ionwm);
+	sdr_exit_xn(sdr);
 	return vdb;
 }
 
@@ -263,6 +255,13 @@ static int	getApplicableRange(IonCXref *contact, unsigned int *owlt)
 	IonRXref	arg;
 	PsmAddress	elt;
 	IonRXref	*range;
+
+	if (contact->discovered || contact->confidence < 1.0)
+	{
+		return 0;	/*	Physically adjacent nodes.	*/
+	}
+
+	/*	This is a scheduled contact; need to know the OWLT.	*/
 
 	memset((char *) &arg, 0, sizeof(IonRXref));
 	arg.fromNode = contact->fromNode;
@@ -318,6 +317,7 @@ static int	computeDistanceToTerminus(IonCXref *rootContact,
 	time_t		transmitTime;
 	time_t		arrivalTime;
 	IonCXref	*finalContact = NULL;
+	float		highestConfidence = 0.0;
 	time_t		earliestFinalArrivalTime = MAX_TIME;
 	IonCXref	*nextContact;
 	time_t		earliestArrivalTime;
@@ -365,6 +365,10 @@ static int	computeDistanceToTerminus(IonCXref *rootContact,
 				continue;
 			}
 
+if (current == rootContact && contact->confidence < 1.0)
+{
+	continue;	/*	First contact must be certain.		*/
+}
 			work = (CgrContactNote *) psp(ionwm,
 					contact->routingObject);
 			CHKERR(work);
@@ -454,9 +458,15 @@ static int	computeDistanceToTerminus(IonCXref *rootContact,
 
 				if (contact->toNode == terminusNode->nodeNbr)
 				{
-					if (work->arrivalTime
-						< earliestFinalArrivalTime)
+					if (contact->confidence >
+							highestConfidence
+					|| (contact->confidence ==
+							highestConfidence
+						&& work->arrivalTime
+						< earliestFinalArrivalTime))
 					{
+						highestConfidence
+							= contact->confidence;
 						earliestFinalArrivalTime
 							= work->arrivalTime;
 						finalContact = contact;
@@ -520,6 +530,7 @@ static int	computeDistanceToTerminus(IonCXref *rootContact,
 	if (finalContact)	/*	Found a route to terminus node.	*/
 	{
 		route->arrivalTime = earliestFinalArrivalTime;
+		route->arrivalConfidence = 1.0;
 
 		/*	Load the entire route into the "hops" list,
 		 *	backtracking to root, and compute the time
@@ -542,6 +553,7 @@ static int	computeDistanceToTerminus(IonCXref *rootContact,
 				maxCapacity = work->capacity;
 			}
 
+			route->arrivalConfidence *= contact->confidence;
 			addr = psa(ionwm, contact);
 			TRACE(CgrHop, contact->fromNode, contact->toNode);
 			if (sm_list_insert_first(ionwm, route->hops, addr) == 0)
@@ -575,6 +587,7 @@ static int	findNextBestRoute(PsmPartition ionwm, IonCXref *rootContact,
 	PsmAddress	addr;
 	CgrRoute	*route;
 
+//printf("Node %lu: findNextBestRoute to: %lu\n", getOwnNodeNbr(), terminusNode->nodeNbr);
 	*routeAddr = 0;		/*	Default.			*/
 	addr = psm_zalloc(ionwm, sizeof(CgrRoute));
 	if (addr == 0)
@@ -673,7 +686,7 @@ static PsmAddress	loadRouteList(IonNode *terminusNode, time_t currentTime,
 {
 	PsmPartition	ionwm = getIonwm();
 	IonVdb		*ionvdb = getIonVdb();
-	CgrVdb		*cgrvdb = _cgrvdb(NULL);
+	CgrVdb		*cgrvdb = getCgrVcb(CGRVDB_NAME);
 	int		payloadClass;
 	PsmAddress	elt;
 	IonCXref	*contact;
@@ -688,6 +701,7 @@ static PsmAddress	loadRouteList(IonNode *terminusNode, time_t currentTime,
 
 	CHKZERO(ionvdb);
 	CHKZERO(cgrvdb);
+//printf("Node %lu: loadRouteList to: %lu\n", getOwnNodeNbr(), terminusNode->nodeNbr);
 
 	/*	First create route list for this destination node.	*/
 
@@ -716,13 +730,15 @@ static PsmAddress	loadRouteList(IonNode *terminusNode, time_t currentTime,
 	 *	to itself and terminating in the "final contact"
 	 *	(which is the terminus node's contact with itself).
 	 *	Each time we search, we exclude from consideration
-	 *	the first contact in every previously computed route.	*/
+	 *	the earliest-expiring contact in every previously
+	 *	computed route.						*/
 
 	rootContact.fromNode = getOwnNodeNbr();
 	rootContact.toNode = rootContact.fromNode;
 	rootWork.arrivalTime = currentTime;
 	for (payloadClass = 0; payloadClass < PAYLOAD_CLASSES; payloadClass++)
 	{
+if (payloadClass != 1) continue;
 		/*	For each series of searches, clear Dijkstra
 		 *	work areas for all contacts.			*/
 
@@ -997,16 +1013,24 @@ static int	recomputeRouteForContact(uvast contactToNodeNbr,
 	}
 
 	/*	Finally, insert that route into the terminusNode's
-	 *	list of routes in arrivalTime order.			*/
+	 *	list of routes in confidence/arrivalTime order.	*/
 
 	newRoute = (CgrRoute *) psp(ionwm, routeAddr);
 	for (elt = sm_list_first(ionwm, routes); elt; elt =
 			sm_list_next(ionwm, elt))
 	{
 		route = (CgrRoute *) psp(ionwm, sm_list_data(ionwm, elt));
-		if (route->arrivalTime <= newRoute->arrivalTime)
+		if (route->arrivalConfidence > newRoute->arrivalConfidence)
 		{
 			continue;
+		}
+
+		if (route->arrivalConfidence == newRoute->arrivalConfidence)
+		{
+			if (route->arrivalTime <= newRoute->arrivalTime)
+			{
+				continue;
+			}
 		}
 
 		break;		/*	Insert before this route.	*/
@@ -1326,6 +1350,7 @@ static int	tryRoute(CgrRoute *route, time_t currentTime, Bundle *bundle,
 	time_t		eto;
 	ProximateNode	*proxNode;
 
+//printf("Node %lu: tryRoute to: %lu\n", getOwnNodeNbr(), route->toNodeNbr);
 	if (getDirective(route->toNodeNbr, plans, bundle, &directive) == 0)
 	{
 		TRACE(CgrIgnoreRoute, CgrNoApplicableDirective);
@@ -1409,8 +1434,14 @@ static int	tryRoute(CgrRoute *route, time_t currentTime, Bundle *bundle,
 			/*	This route starts with contact with a
 			 *	neighbor that's already in the list.	*/
 
-			if (arrivalTime < proxNode->arrivalTime)
+			if (route->arrivalConfidence >
+					proxNode->arrivalConfidence
+			|| (route->arrivalConfidence ==
+					proxNode->arrivalConfidence
+				&& arrivalTime < proxNode->arrivalTime))
 			{
+				proxNode->arrivalConfidence =
+						route->arrivalConfidence;
 				proxNode->arrivalTime = arrivalTime;
 				proxNode->hopCount = hopCount;
 				proxNode->forfeitTime = route->toTime;
@@ -1421,7 +1452,9 @@ static int	tryRoute(CgrRoute *route, time_t currentTime, Bundle *bundle,
 			}
 			else
 			{
-				if (arrivalTime == proxNode->arrivalTime)
+				if (route->arrivalConfidence ==
+						proxNode->arrivalConfidence
+				&& arrivalTime == proxNode->arrivalTime)
 				{
 					if (hopCount < proxNode->hopCount)
 					{
@@ -1472,6 +1505,7 @@ static int	tryRoute(CgrRoute *route, time_t currentTime, Bundle *bundle,
 	proxNode->neighborNodeNbr = route->toNodeNbr;
 	memcpy((char *) &(proxNode->directive), (char *) &directive,
 			sizeof(FwdDirective));
+	proxNode->arrivalConfidence = route->arrivalConfidence;
 	proxNode->arrivalTime = arrivalTime;
 	proxNode->hopCount = hopCount;
 	proxNode->forfeitTime = route->toTime;
@@ -1492,6 +1526,7 @@ static int	identifyProximateNodes(IonNode *terminusNode, Bundle *bundle,
 	PsmAddress	elt;
 	PsmAddress	nextElt;
 	PsmAddress	addr;
+	IonCXref	*contact;
 	CgrRoute	*route;
 	uvast		contactToNodeNbr;
 	time_t		contactFromTime;
@@ -1572,9 +1607,17 @@ static int	identifyProximateNodes(IonNode *terminusNode, Bundle *bundle,
 
 		if (route->arrivalTime > deadline)
 		{
-			/*	No more plausible routes.		*/
+			/*	Not a plausible route.			*/
 
-			return 0;
+			continue;
+		}
+
+		addr = sm_list_data(ionwm, sm_list_first(ionwm, route->hops));
+		contact = (IonCXref *) psp(ionwm, addr);
+//printf("Contact confidence %f.\n", contact->confidence);
+		if (contact->confidence != 1.0)
+		{
+			continue;	/*	Not currently usable.	*/
 		}
 
 		/*	Never route to self unless self is the final
@@ -1663,6 +1706,21 @@ static int	excludeNode(Lyst excludedNodes, uvast nodeNbr)
 	return 0;
 }
 
+static float	getNewDlvConfidence(Bundle *bundle, ProximateNode *proxNode)
+{
+	float		dlvFailureConfidence;
+
+	/*	Delivery of bundle fails if and only if all forwarded
+	 *	copies fail to arrive.  Our confidence that this will
+	 *	happen is the product of our confidence in the delivery
+	 *	failures of all forwarded copies, each of which is
+	 *	1.0 minus our confidence that this copy will arrive.	*/
+
+	dlvFailureConfidence = (1.0 - bundle->dlvConfidence)
+			* (1.0 - proxNode->arrivalConfidence);
+	return (1.0 - dlvFailureConfidence);
+}
+
 static int	enqueueToNeighbor(ProximateNode *proxNode, Bundle *bundle,
 			Object bundleObj, IonNode *terminusNode)
 {
@@ -1673,6 +1731,17 @@ static int	enqueueToNeighbor(ProximateNode *proxNode, Bundle *bundle,
 	Embargo		*embargo;
 	BpEvent		event;
 
+	/*	Note that a copy is being sent on the route through
+	 *	this neighbor.						*/
+
+	if (bundle->xmitCopiesCount == MAX_XMIT_COPIES)
+	{
+		return 0;	/*	Reached forwarding limit.	*/
+	}
+
+	bundle->xmitCopies[bundle->xmitCopiesCount] = proxNode->neighborNodeNbr;
+	bundle->xmitCopiesCount++;
+	bundle->dlvConfidence = getNewDlvConfidence(bundle, proxNode);
 	if (proxNode->neighborNodeNbr == bundle->destination.c.nodeNbr)
 	{
 		serviceNbr = bundle->destination.c.serviceNbr;
@@ -1938,13 +2007,114 @@ static int	manageOverbooking(ProximateNode *neighbor, Object plans,
 }
 #endif
 
+static int	proxNodeRedundant(Bundle *bundle, vast nodeNbr)
+{
+	int	i;
+
+	for (i = 0; i < bundle->xmitCopiesCount; i++)
+	{
+		if (bundle->xmitCopies[i] == nodeNbr)
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int	sendCriticalBundle(Bundle *bundle, Object bundleObj,
+			IonNode *terminusNode, Lyst proximateNodes, int preview)
+{
+	LystElt		elt;
+	LystElt		nextElt;
+	ProximateNode	*proxNode;
+	Bundle		newBundle;
+	Object		newBundleObj;
+
+	for (elt = lyst_first(proximateNodes); elt; elt = nextElt)
+	{
+		nextElt = lyst_next(elt);
+		proxNode = (ProximateNode *) lyst_data_set(elt, NULL);
+		lyst_delete(elt);
+		if (preview)
+		{
+			MRELEASE(proxNode);
+			continue;
+		}
+
+		if (proxNodeRedundant(bundle, proxNode->neighborNodeNbr))
+		{
+			MRELEASE(proxNode);
+			continue;
+		}
+
+		if (bundle->ductXmitElt)
+		{
+			/*	This copy of bundle has already
+			 *	been enqueued.				*/
+
+			if (bpClone(bundle, &newBundle, &newBundleObj,
+					0, 0) < 0)
+			{
+				putErrmsg("Can't clone bundle.", NULL);
+				lyst_destroy(proximateNodes);
+				return -1;
+			}
+
+			bundle = &newBundle;
+			bundleObj = newBundleObj;
+		}
+
+		if (enqueueToNeighbor(proxNode, bundle, bundleObj,
+					terminusNode))
+		{
+			putErrmsg("Can't queue for neighbor.", NULL);
+			lyst_destroy(proximateNodes);
+			return -1;
+		}
+
+		MRELEASE(proxNode);
+	}
+
+	lyst_destroy(proximateNodes);
+	if (bundle->dlvConfidence > 0.0
+	&& bundle->dlvConfidence < MIN_NET_DELIVERY_CONFIDENCE)
+	{
+		/*	Must keep on trying to send this bundle.	*/
+
+		if (bundle->ductXmitElt)
+		{
+			/*	This copy of bundle has already
+			 *	been enqueued.				*/
+
+			if (bpClone(bundle, &newBundle, &newBundleObj,
+					0, 0) < 0)
+			{
+				putErrmsg("Can't clone bundle.", NULL);
+				return -1;
+			}
+
+			bundle = &newBundle;
+			bundleObj = newBundleObj;
+		}
+
+		if (enqueueToLimbo(bundle, bundleObj) < 0)
+		{
+			putErrmsg("Can't put bundle in limbo.", NULL);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 static int 	cgrForward(Bundle *bundle, Object bundleObj,
 			uvast terminusNodeNbr, Object plans,
 			CgrLookupFn getDirective, time_t atTime,
 			CgrTrace *trace, int preview)
 {
 	IonVdb		*ionvdb = getIonVdb();
-	CgrVdb		*cgrvdb = _cgrvdb(NULL);
+	CgrVdb		*cgrvdb = getCgrVcb(CGRVDB_NAME);
 	IonNode		*terminusNode;
 	PsmAddress	nextNode;
 	int		ionMemIdx;
@@ -1959,6 +2129,8 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 	Bundle		newBundle;
 	Object		newBundleObj;
 	ProximateNode	*selectedNeighbor;
+	float		newDlvConfidence;
+	float		confidenceImprovement;
 
 	/*	Determine whether or not the contact graph for this
 	 *	node identifies one or more proximate nodes to
@@ -1978,6 +2150,7 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 	 *	regardless of whether that node is the bundle's
 	 *	final destination or an intermediate forwarding
 	 *	station.			 			*/
+//printf("Node %lu: cgrForward to: %lu\n", getOwnNodeNbr(), terminusNodeNbr);
 
 	CHKERR(bundle && bundleObj && terminusNodeNbr && plans && getDirective);
 
@@ -2084,45 +2257,8 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 		/*	Critical bundle; send on all paths.		*/
 
 		TRACE(CgrUseAllProximateNodes);
-		for (elt = lyst_first(proximateNodes); elt; elt = nextElt)
-		{
-			nextElt = lyst_next(elt);
-			proxNode = (ProximateNode *) lyst_data_set(elt, NULL);
-			lyst_delete(elt);
-			if (!preview)
-			{
-				if (enqueueToNeighbor(proxNode, bundle,
-						bundleObj, terminusNode))
-				{
-					putErrmsg("Can't queue for neighbor.",
-							NULL);
-					lyst_destroy(proximateNodes);
-					return -1;
-				}
-			}
-
-			MRELEASE(proxNode);
-			if (nextElt)
-			{
-				/*	Every transmission after the
-			 	*	first must operate on a new
-			 	*	clone of the original bundle.	*/
-
-				if (bpClone(bundle, &newBundle, &newBundleObj,
-						0, 0) < 0)
-				{
-					putErrmsg("Can't clone bundle.", NULL);
-					lyst_destroy(proximateNodes);
-					return -1;
-				}
-
-				bundle = &newBundle;
-				bundleObj = newBundleObj;
-			}
-		}
-
-		lyst_destroy(proximateNodes);
-		return 0;
+		return sendCriticalBundle(bundle, bundleObj, terminusNode,
+				proximateNodes, preview);
 	}
 
 	/*	Non-critical bundle; send on the minimum-latency path.
@@ -2136,10 +2272,44 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 		proxNode = (ProximateNode *) lyst_data_set(elt, NULL);
 		lyst_delete(elt);
 		TRACE(CgrConsiderProximateNode, proxNode->neighborNodeNbr);
+
+		/*	Skip this candidate if not cost-effective.	*/
+
+		if (bundle->dlvConfidence > 0.0
+		&& bundle->dlvConfidence < 1.0)
+		{
+			newDlvConfidence =
+				getNewDlvConfidence(bundle, proxNode);
+			confidenceImprovement =
+				(newDlvConfidence / bundle->dlvConfidence)
+				- 1.0;
+			if (confidenceImprovement < MIN_CONFIDENCE_IMPROVEMENT)
+			{
+				TRACE(CgrIgnoreProximateNode, CgrNoHelp);
+				MRELEASE(proxNode);
+				continue;
+			}
+		}
+
+		/*	Select this candidate if it's the best.		*/
+
 		if (selectedNeighbor == NULL)
 		{
 			TRACE(CgrSelectProximateNode);
 			selectedNeighbor = proxNode;
+		}
+		else if (proxNode->arrivalConfidence >
+				selectedNeighbor->arrivalConfidence)
+		{
+			TRACE(CgrSelectProximateNode);
+			MRELEASE(selectedNeighbor);
+			selectedNeighbor = proxNode;
+		}
+		else if (proxNode->arrivalConfidence <
+				selectedNeighbor->arrivalConfidence)
+		{
+			TRACE(CgrIgnoreProximateNode, CgrLowerConfidence);
+			MRELEASE(proxNode);
 		}
 		else if (proxNode->arrivalTime <
 				selectedNeighbor->arrivalTime)
@@ -2148,41 +2318,33 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 			MRELEASE(selectedNeighbor);
 			selectedNeighbor = proxNode;
 		}
-		else if (proxNode->arrivalTime ==
+		else if (proxNode->arrivalTime >
 				selectedNeighbor->arrivalTime)
 		{
-			if (proxNode->hopCount < selectedNeighbor->hopCount)
-			{
-				TRACE(CgrSelectProximateNode);
-				MRELEASE(selectedNeighbor);
-				selectedNeighbor = proxNode;
-			}
-			else if (proxNode->hopCount ==
-					selectedNeighbor->hopCount)
-			{
-				if (proxNode->neighborNodeNbr <
-					selectedNeighbor->neighborNodeNbr)
-				{
-					TRACE(CgrSelectProximateNode);
-					MRELEASE(selectedNeighbor);
-					selectedNeighbor = proxNode;
-				}
-				else	/*	Larger node#; ignore.	*/
-				{
-					TRACE(CgrIgnoreProximateNode,
-							CgrLargerNodeNbr);
-					MRELEASE(proxNode);
-				}
-			}
-			else	/*	More hops; ignore.		*/
-			{
-				TRACE(CgrIgnoreProximateNode, CgrMoreHops);
-				MRELEASE(proxNode);
-			}
-		}
-		else	/*	Later arrival time; ignore.		*/
-		{
 			TRACE(CgrIgnoreProximateNode, CgrLaterArrivalTime);
+			MRELEASE(proxNode);
+		}
+		else if (proxNode->hopCount < selectedNeighbor->hopCount)
+		{
+			TRACE(CgrSelectProximateNode);
+			MRELEASE(selectedNeighbor);
+			selectedNeighbor = proxNode;
+		}
+		else if (proxNode->hopCount > selectedNeighbor->hopCount)
+		{
+			TRACE(CgrIgnoreProximateNode, CgrMoreHops);
+			MRELEASE(proxNode);
+		}
+		else if (proxNode->neighborNodeNbr <
+				selectedNeighbor->neighborNodeNbr)
+		{
+			TRACE(CgrSelectProximateNode);
+			MRELEASE(selectedNeighbor);
+			selectedNeighbor = proxNode;
+		}
+		else	/*	Larger node#; ignore.	*/
+		{
+			TRACE(CgrIgnoreProximateNode, CgrLargerNodeNbr);
 			MRELEASE(proxNode);
 		}
 	}
@@ -2227,6 +2389,38 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 		TRACE(CgrNoProximateNode);
 	}
 
+	if (bundle->dlvConfidence < MIN_NET_DELIVERY_CONFIDENCE
+	&& bundle->id.source.c.nodeNbr != bundle->destination.c.nodeNbr)
+	{
+		/*	Must keep on trying to send this bundle.	*/
+
+		/*	Note: need a way to force abandonment of
+		 *	bundles that genuinely are currently non-
+		 *	forwardable.					*/
+
+		if (bundle->ductXmitElt)
+		{
+			/*	This copy of bundle has already
+			 *	been enqueued.				*/
+
+			if (bpClone(bundle, &newBundle, &newBundleObj,
+					0, 0) < 0)
+			{
+				putErrmsg("Can't clone bundle.", NULL);
+				return -1;
+			}
+
+			bundle = &newBundle;
+			bundleObj = newBundleObj;
+		}
+
+		if (enqueueToLimbo(bundle, bundleObj) < 0)
+		{
+			putErrmsg("Can't put bundle in limbo.", NULL);
+			return -1;
+		}
+	}
+
 	return 0;
 }
 
@@ -2257,11 +2451,57 @@ int	cgr_forward(Bundle *bundle, Object bundleObj, uvast terminusNodeNbr,
 	return 0;
 }
 
+float	cgr_prospect(uvast terminusNodeNbr, unsigned int deadline)
+{
+	PsmPartition	wm = getIonwm();
+	IonVdb		*ionvdb = getIonVdb();
+	time_t		currentTime = getUTCTime();
+	IonNode		*terminusNode;
+	PsmAddress	nextNode;
+	PsmAddress	routes;		/*	SmList of CgrRoutes.	*/
+	PsmAddress	elt;
+	PsmAddress	addr;
+	CgrRoute	*route;
+	float		prospect = 0.0;
+
+	terminusNode = findNode(ionvdb, terminusNodeNbr, & nextNode);
+	if (terminusNode == NULL)
+	{
+		return 0.0;		/*	Unknown node, no chance.*/
+	}
+
+	routes = terminusNode->routingObject;
+	if (routes == 0)
+	{
+		return 0.0;		/*	No routes, no chance.	*/
+	}
+
+	for (elt = sm_list_first(wm, routes); elt; elt = sm_list_next(wm, elt))
+	{
+		addr = sm_list_data(wm, elt);
+		route = (CgrRoute *) psp(wm, addr);
+		if (route->toTime < currentTime)
+		{
+			continue;	/*	Obsolete route.		*/
+		}
+
+		if (route->arrivalTime > deadline)
+		{
+			continue;	/*	Not a plausible route.	*/
+		}
+
+		if (route->arrivalConfidence > prospect)
+		{
+			prospect = route->arrivalConfidence;
+		}
+	}
+
+	return prospect;
+}
+
 void	cgr_start()
 {
-	char	*name = "cgrvdb";
-
-	oK(_cgrvdb(&name));
+	oK(getCgrVcb(CGRVDB_NAME));
 }
 
 const char	*cgr_tracepoint_text(CgrTraceType traceType)
@@ -2345,6 +2585,8 @@ capacity for this bundle",
 
 	[CgrMoreHops] = "more hops",
 	[CgrIdentical] = "identical to a previous route",
+	[CgrNoHelp] = "insufficient delivery confidence improvement",
+	[CgrLowerConfidence] = "lower delivery confidence",
 	[CgrLaterArrivalTime] = "later arrival time",
 	[CgrLargerNodeNbr] = "initial hop has larger node number",
 	};
@@ -2364,7 +2606,6 @@ void	cgr_stop()
 	PsmAddress	vdbAddress;
 	PsmAddress	elt;
 	CgrVdb		*vdb;
-	char		*stop = NULL;
 
 	/*Clear Route Caches*/
 	clearRoutingObjects(wm);
@@ -2380,13 +2621,10 @@ void	cgr_stop()
 	{
 		vdb = (CgrVdb *) psp(wm, vdbAddress);
 		sm_list_destroy(wm, vdb->routeLists, NULL, NULL);
-		psm_free(wm, vdbAddress);
 		if (psm_uncatlg(wm, name) < 0)
 		{
 			putErrmsg("Failed Uncataloging vdb.",NULL);
 		}
+		psm_free(wm, vdbAddress);
 	}
-
-	/*Reset pointer*/
-	oK(_cgrvdb(&stop));
 }

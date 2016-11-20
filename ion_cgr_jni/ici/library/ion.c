@@ -35,6 +35,14 @@ static char	*_ionvdbName()
 	return "ionvdb";
 }
 
+int		ionAttach()
+{
+	return 0;
+}
+void	ionDetach()
+{
+}
+
 PsmPartition getIonwm(){
 	return getIonWm();
 }
@@ -70,6 +78,7 @@ IonVdb	*getIonVdb()
 		return vdb;
 	}
 
+	putErrmsg("Failed searching for vdb.", itoa(getOwnNodeNbr()));
 	return NULL;
 }
 
@@ -89,6 +98,8 @@ Object	getIonDbObject()
 	//TODO stub
 	Object result;
 	result = sdr_find(getIonsdr(), _iondbName(), NULL);
+	if (result == NULL)
+		putErrmsg("Failed to locate ionDb.", itoa(getOwnNodeNbr()));
 	return result;
 	//return _iondbObject(NULL);
 }
@@ -172,6 +183,22 @@ void	writeTimestampUTC(time_t timestamp, char *timestampBuffer)
 	CHKVOID(timestampBuffer);
 	oK(gmtime_r(&timestamp, &ts));
 	snprintf(timestampBuffer, 20, timestampOutFormat,
+			ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday,
+			ts.tm_hour, ts.tm_min, ts.tm_sec);
+}
+
+time_t	readTimestampLocal(char *timestampBuffer, time_t referenceTime)
+{
+	return readTimestamp(timestampBuffer, referenceTime, 0);
+}
+
+void	writeTimestampLocal(time_t timestamp, char *timestampBuffer)
+{
+	struct tm	ts;
+
+	CHKVOID(timestampBuffer);
+	oK(localtime_r(&timestamp, &ts));
+	isprintf(timestampBuffer, 20, timestampOutFormat,
 			ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday,
 			ts.tm_hour, ts.tm_min, ts.tm_sec);
 }

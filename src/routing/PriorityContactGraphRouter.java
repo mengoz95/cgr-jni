@@ -359,33 +359,36 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 	protected void checkExpiredRoutes() {
 		List<Message> expired = new ArrayList<>(getNrofMessages());
 		for (Outduct o : getOutducts()) {
-			for (Message m : ((PriorityOutduct) o).getExpeditedQueue()) {
-				MessageStatus status = getMessageStatus(m);
-				long fwdTimelimit = status.getRouteTimelimit();
-				if (fwdTimelimit == 0) // This Message hasn't been routed yet
-					return;
-				if (SimClock.getIntTime() > fwdTimelimit) {
-					expired.add(m);
+			if (o instanceof PriorityOutduct) {
+				for (Message m : ((PriorityOutduct) o).getExpeditedQueue()) {
+					MessageStatus status = getMessageStatus(m);
+					long fwdTimelimit = status.getRouteTimelimit();
+					if (fwdTimelimit == 0) // This Message hasn't been routed yet
+						return;
+					if (SimClock.getIntTime() > fwdTimelimit) {
+						expired.add(m);
+					}
+				}
+				for (Message m : ((PriorityOutduct) o).getNormalQueue()) {
+					MessageStatus status = getMessageStatus(m);
+					long fwdTimelimit = status.getRouteTimelimit();
+					if (fwdTimelimit == 0) // This Message hasn't been routed yet
+						return;
+					if (SimClock.getIntTime() > fwdTimelimit) {
+						expired.add(m);
+					}
+				}
+				for (Message m : ((PriorityOutduct) o).getBulkQueue()) {
+					MessageStatus status = getMessageStatus(m);
+					long fwdTimelimit = status.getRouteTimelimit();
+					if (fwdTimelimit == 0) // This Message hasn't been routed yet
+						return;
+					if (SimClock.getIntTime() > fwdTimelimit) {
+						expired.add(m);
+					}
 				}
 			}
-			for (Message m : ((PriorityOutduct) o).getNormalQueue()) {
-				MessageStatus status = getMessageStatus(m);
-				long fwdTimelimit = status.getRouteTimelimit();
-				if (fwdTimelimit == 0) // This Message hasn't been routed yet
-					return;
-				if (SimClock.getIntTime() > fwdTimelimit) {
-					expired.add(m);
-				}
-			}
-			for (Message m : ((PriorityOutduct) o).getBulkQueue()) {
-				MessageStatus status = getMessageStatus(m);
-				long fwdTimelimit = status.getRouteTimelimit();
-				if (fwdTimelimit == 0) // This Message hasn't been routed yet
-					return;
-				if (SimClock.getIntTime() > fwdTimelimit) {
-					expired.add(m);
-				}
-			}
+			
 			for (Message m : expired) {
 				/*
 				 * If a route has expired for a message, I put it into the limbo

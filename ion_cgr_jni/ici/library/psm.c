@@ -11,41 +11,53 @@
 #include "shared.h"
 #include "jni_thread.h"
 
+#define PsmPartitionClass "cgr_jni/psm/PsmPartition"
 
-PsmAddress	Psm_zalloc(const char * s, int n, PsmPartition partition, unsigned long length)
+PsmAddress	Psm_zalloc(const char * s, int n,
+		PsmPartition partition, unsigned long length)
 {
 	JNIEnv * jniEnv = getThreadLocalEnv();
 	void * pointer = (void *) malloc(length);
-	jclass psmPartitionClass = (*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
-	jmethodID zalloc = (*jniEnv)->GetMethodID(jniEnv, psmPartitionClass, "psmAlloc","(J)J");
-	jlong result = (*jniEnv)->CallLongMethod(jniEnv, partition, zalloc, (jlong) pointer);
+	jclass psmPartitionClass =
+			(*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
+	jmethodID zalloc = 	(*jniEnv)->GetMethodID(jniEnv,
+			psmPartitionClass, "psmAlloc","(J)J");
+	jlong result = 	(*jniEnv)->CallLongMethod(jniEnv,
+			partition, zalloc, (jlong) pointer);
 	if (pointer != (void*)(intptr_t) result)
 		return NULL;
 	return pointer;
 }
 
-void Psm_free(const char * s, int n, PsmPartition partition, PsmAddress address)
+void Psm_free(const char * s, int n,
+		PsmPartition partition, PsmAddress address)
 {
 	JNIEnv * jniEnv = getThreadLocalEnv();
-	jclass psmPartitionClass = (*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
-	jmethodID method = (*jniEnv)->GetMethodID(jniEnv, psmPartitionClass, "psmFree","(J)V");
+	jclass psmPartitionClass =
+			(*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
+	jmethodID method = (*jniEnv)->GetMethodID(jniEnv,
+			psmPartitionClass, "psmFree","(J)V");
 	(*jniEnv)->CallVoidMethod(jniEnv, partition, method, address);
 	free((void *)address);
 }
 
-int	psm_locate(PsmPartition partition , char *objName,	PsmAddress *objLocation, PsmAddress *entryElt)
+int	psm_locate(PsmPartition partition , char *objName,
+		PsmAddress *objLocation, PsmAddress *entryElt)
 {
+	//cached for optimization
+	static jmethodID method = 0;
+	static jclass psmPartitionClass;
 	JNIEnv * jniEnv = getThreadLocalEnv();
-	jclass psmPartitionClass = (*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
+	if (method == 0)
+	{
+		psmPartitionClass =
+				(*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
+		method = (*jniEnv)->GetMethodID(jniEnv,
+				psmPartitionClass, "psmLocate","(Ljava/lang/String;)J");
+	}
 	jstring name = (*jniEnv)->NewStringUTF(jniEnv, objName);
-	//jclass psmAddressClass = (*jniEnv)->FindClass(jniEnv, PsmAddressClass);
-	//jmethodID constructor = (*jniEnv)->GetMethodID(jniEnv, psmAddressClass, "<init>","()V");
-	//*objLocation = (*jniEnv)->NewObject(jniEnv, psmAddressClass, constructor);
-	//*entryElt = (*jniEnv)->NewObject(jniEnv, psmAddressClass, constructor);
-	//jmethodID locate = (*jniEnv)->GetMethodID(jniEnv, psmPartitionClass, "psmLocate","(Ljava/lang/String;Ljni/test/psm/PsmAddress;Ljni/test/psm/PsmAddress;)I");
-	//jint result = (*jniEnv)->CallIntMethod(jniEnv, partition, locate, name, *objLocation, *entryElt);
-	jmethodID locate = (*jniEnv)->GetMethodID(jniEnv, psmPartitionClass, "psmLocate","(Ljava/lang/String;)J");
-	jlong result = (*jniEnv)->CallLongMethod(jniEnv, partition, locate, name);
+	jlong result = (*jniEnv)->CallLongMethod(jniEnv,
+			partition, method, name);
 	if (result < 0)
 	{
 		*entryElt = 0;
@@ -53,46 +65,58 @@ int	psm_locate(PsmPartition partition , char *objName,	PsmAddress *objLocation, 
 	}
 	*objLocation = (PsmAddress) result;
 	*entryElt = (PsmAddress) result;
+	name = 0;
 	return 0;
 }
 
-int	Psm_catlg(const char * s, int n, PsmPartition partition, char *objName, PsmAddress objLocation)
+int	Psm_catlg(const char * s, int n,
+		PsmPartition partition, char *objName, PsmAddress objLocation)
 {
+	//cached for optimization
+	static jmethodID method = 0;
+	static jclass psmPartitionClass;
 	JNIEnv * jniEnv = getThreadLocalEnv();
-	jclass psmPartitionClass = (*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
-	//jmethodID catlg = (*jniEnv)->GetMethodID(jniEnv, psmPartitionClass, "psmCatlg","(Ljava/lang/String;Ljni/test/psm/PsmAddress;)I");
-	jmethodID catlg = (*jniEnv)->GetMethodID(jniEnv, psmPartitionClass, "psmCatlg","(Ljava/lang/String;J)I");
+	if (method == 0)
+	{
+		psmPartitionClass =
+				(*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
+		method = (*jniEnv)->GetMethodID(jniEnv,
+				psmPartitionClass, "psmCatlg","(Ljava/lang/String;J)I");
+	}
 	jstring name = (*jniEnv)->NewStringUTF(jniEnv, objName);
-	jint result = (*jniEnv)->CallIntMethod(jniEnv, partition, catlg, name, (jlong) objLocation);
+	jint result = (*jniEnv)->CallIntMethod(jniEnv, partition,
+			method, name, (jlong) objLocation);
+	name = 0;
 	return result;
 }
 
-int	Psm_uncatlg(const char * s, int n, PsmPartition partition, char *objName)
+int	Psm_uncatlg(const char * s, int n,
+		PsmPartition partition, char *objName)
 {
+	//cached for optimization
+	static jmethodID method = 0;
+	static jclass psmPartitionClass;
 	JNIEnv * jniEnv = getThreadLocalEnv();
-	jclass psmPartitionClass = (*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
-	jmethodID uncatlg = (*jniEnv)->GetMethodID(jniEnv, psmPartitionClass, "psmUncatlg","(Ljava/lang/String;)I");
+	if (method == 0)
+	{
+		psmPartitionClass =
+				(*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
+		method = (*jniEnv)->GetMethodID(jniEnv,
+				psmPartitionClass, "psmUncatlg","(Ljava/lang/String;)I");
+	}
 	jstring name = (*jniEnv)->NewStringUTF(jniEnv, objName);
-	jint result = (*jniEnv)->CallIntMethod(jniEnv, partition, uncatlg, name);
+	jint result = (*jniEnv)->CallIntMethod(jniEnv,
+			partition, method, name);
+	name = 0;
 	return result;
 }
 
 void * psp(PsmPartition partition, PsmAddress address)
 {
-	//JNIEnv * jniEnv = getThreadLocalEnv();
-	//jclass psmAddressClass = (*jniEnv)->FindClass(jniEnv, PsmAddressClass);
-	//jmethodID getPointer = (*jniEnv)->GetMethodID(jniEnv, psmAddressClass, "getPointer","()J");
-	//jlong pointer = (*jniEnv)->CallLongMethod(jniEnv, address, getPointer);
-	//return (void *) pointer;
 	return (void *) address;
 }
 
 PsmAddress psa(PsmPartition partition , void * pointer)
 {
-	//JNIEnv * jniEnv = getThreadLocalEnv();
-	//jclass psmPartitionClass = (*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
-	//jmethodID getAddress = (*jniEnv)->GetMethodID(jniEnv, psmPartitionClass, "getAddress","(J)Ljni/test/psm/PsmAddress;");
-	//jobject result = (*jniEnv)->CallObjectMethod(jniEnv, partition, getAddress, pointer);
-	//return (PsmAddress) result;
 	return (PsmAddress) pointer;
 }

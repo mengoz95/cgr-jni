@@ -10,36 +10,43 @@
 
 int	sdr_begin_xn(Sdr sdrv)
 {
-	//TODO stub
+	// NO OP
 	return 1;
 }
 void	sdr_exit_xn(Sdr sdrv)
 {
-	//TODO stub
+	// NO OP
 }
 void		sdr_cancel_xn(Sdr sdr)
 {
-	//TODO stub
+	// NO OP
 }
 int	sdr_end_xn(Sdr sdrv)
 {
-	//TODO stub
+	// NO OP
 	return 0;
 }
 void	sdr_read(Sdr sdrv, char *into, Address from, long length)
 {
-	//TODO stub
+	// NO OP
 	//_sdrfetch(sdrv, into, from, length);
-	if (from != NULL && into != NULL)
+	if (from == NULL)
 	{
-		void * ptr = psp(sdrv, from);
-		memcpy(into, ptr, length);
+		putErrmsg("Error null pointer", "from");
+		return;
 	}
+	if (into == NULL)
+	{
+		putErrmsg("Error null pointer", "into");
+		return;
+	}
+	void * ptr = psp(sdrv, from);
+	memcpy(into, ptr, length);
 }
 void	Sdr_write(const char *file, int line, Sdr sdrv, Address into,
 		char *from, long length)
 {
-	//TODO stub
+	// NO OP
 	void * ptr = psp(sdrv, into);
 	memcpy(ptr, from, length);
 }

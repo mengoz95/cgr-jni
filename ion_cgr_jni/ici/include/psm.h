@@ -18,8 +18,6 @@
 #include <jni.h>
 
 #include "platform.h"
-#define PsmPartitionClass "cgr_jni/psm/PsmPartition"
-#define PsmPartitionManagerClass "cgr_jni/psm/PsmPartitionManager"
 
 typedef struct
 {
@@ -44,11 +42,10 @@ typedef struct
 //	long		traceArea[3];	/*	psm_str for sptrace.	*/
 //} PsmView, *PsmPartition;
 
-typedef jobject PsmPartition;
-
 typedef enum { Okay, Redundant, Refused } PsmMgtOutcome;
 //typedef unsigned long	PsmAddress;
-//typedef jobject PsmAddress;
+
+typedef jobject PsmPartition;
 typedef void* PsmAddress;
 
 extern int		psm_manage(char *, unsigned long, char *,
