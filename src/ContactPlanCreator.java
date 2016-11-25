@@ -7,15 +7,15 @@ class ContactPlanCreator {
   public static void main(String args[])
   throws IOException {
 	  
-	final String defaultPath = "/home/jakojo/Scaricati/one_1.5.1-RC2/reports/default_scenario_EventLogReport.txt";
+	//final String defaultPath = "";
     FileReader fr;
     String inputFilePath, outputPath;
     int datarate;
     BufferedReader br2 = new BufferedReader(new InputStreamReader(System.in));
     System.out.println("Insert the full path of the input file for the Contact Plan Creator\n");
     inputFilePath = br2.readLine();
-    System.out.println("Insert the datarate for the Contact Plan, in B/s\n");
-    datarate = Integer.parseInt(br2.readLine());
+    //System.out.println("Insert the datarate for the Contact Plan, in B/s\n");
+    //datarate = Integer.parseInt(br2.readLine());
     fr = new FileReader(inputFilePath);
 	BufferedReader br = new BufferedReader(fr);
 	
@@ -38,6 +38,8 @@ class ContactPlanCreator {
     			node1 = Integer.parseInt(temp1);
     			node2 = Integer.parseInt(temp2);
     			if(tokenizer.nextToken().equalsIgnoreCase("UP")){
+    				//SP mod
+    				datarate = Integer.parseInt(tokenizer.nextToken());
     				stop = 0;
     				riga = new ContactPlanLine(start, stop, node1, node2, datarate);
     				contactPlan.add(riga);
