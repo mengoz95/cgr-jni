@@ -1,5 +1,4 @@
 
-@SuppressWarnings("rawtypes")
 public class ContactPlanLine implements Comparable{
 	private int from;
 	private int to;
@@ -70,10 +69,7 @@ public class ContactPlanLine implements Comparable{
 	
 	
 	public String toStringRange() {
-		if(from < to)
-			return "a range " + "\t+" + start + "\t+" + stop + "\t" + from + "\t" + to + "\t" + "1";
-		else
-			return "a range " + "\t+" + start + "\t+" + stop + "\t" + to + "\t" + from + "\t" + "1";
+		return "a range " + "\t+" + start + "\t+" + stop + "\t" + from + "\t" + to + "\t" + "1";
 	}
 	
 
