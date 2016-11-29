@@ -22,7 +22,7 @@ public class ExtendedEventLogReport extends EventLogReport
 	 * 		 if the path changes on local disk it must be changed in this class as well. 
 	 * -Reader: it associates the CPEventsReader defined in the input package and the file before created.
 	 * -Events: list of external events read from the external file. IMPORTANT: must be used a cast*/
-	private File file = new File("/home/federico/workspace/TheOneSimulator/data/contact.txt");
+	private File file = new File("/home/simone/cp.txt");
 	private CPEventsReader reader = new CPEventsReader(file);
 	private List<ExternalEvent> events = reader.readEvents(500);
 	

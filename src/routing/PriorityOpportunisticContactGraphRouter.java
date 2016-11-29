@@ -13,10 +13,7 @@ import core.Message;
 import core.PriorityMessage;
 import core.Settings;
 import core.SimClock;
-import routing.ContactGraphRouter.MessageStatus;
-import routing.ContactGraphRouter.Outduct;
 import routing.PriorityContactGraphRouter.OverbookingStructure;
-import routing.PriorityContactGraphRouter.PriorityOutduct;
 import util.Tuple;
 
 public class PriorityOpportunisticContactGraphRouter extends OpportunisticContactGraphRouter {
@@ -241,7 +238,7 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 
 	@Override
 	public MessageRouter replicate() {
-		return new PriorityContactGraphRouter(this);
+		return new PriorityOpportunisticContactGraphRouter(this);
 	}
 
 	@Override
@@ -460,4 +457,6 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 		listOverbooked.add(entry);
 		return;
 	}
+	
+	
 }
