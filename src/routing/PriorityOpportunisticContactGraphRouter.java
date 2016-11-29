@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import cgr_jni.Libcgr;
 import cgr_jni.Utils;
 import core.Connection;
 import core.DTNHost;
@@ -14,72 +13,14 @@ import core.Message;
 import core.PriorityMessage;
 import core.Settings;
 import core.SimClock;
+import routing.ContactGraphRouter.MessageStatus;
+import routing.ContactGraphRouter.Outduct;
+import routing.PriorityContactGraphRouter.OverbookingStructure;
+import routing.PriorityContactGraphRouter.PriorityOutduct;
 import util.Tuple;
 
-public class PriorityContactGraphRouter extends ContactGraphRouter {
-
-	public static class OverbookingStructure {
-		// class to manage overbooking
-		// every message that adds overbooking to an outduct create a new
-		// instance
-
-		private DTNHost toHost;
-		private double overbooked;
-		private double protect;
-		// whichQueue and queueIndex indicate the next bundle to handle
-		private int whichQueue;
-		private int queueIndex;
-
-		public OverbookingStructure(DTNHost toHost, double overbooked, double protect) {
-			this.toHost = toHost;
-			this.overbooked = overbooked;
-			this.protect = protect;
-		}
-
-		public DTNHost getToHost() {
-			return toHost;
-		}
-
-		public double getOverbooked() {
-			return overbooked;
-		}
-
-		public double getProtect() {
-			return protect;
-		}
-
-		public void subtractFromOverbooked(double sub) {
-			overbooked -= sub;
-		}
-
-		public void subtractFromProtected(double sub) {
-			protect -= sub;
-		}
-
-		public boolean isOverbooked() {
-			return (overbooked > 0.0);
-		}
-
-		public int getWhichQueue() {
-			return whichQueue;
-		}
-
-		public void setWhichQueue(int queue) {
-			if (queue < 0 || queue > 2)
-				throw new IllegalArgumentException("Queue must be in 0..2");
-
-			whichQueue = queue;
-		}
-
-		public int getQueueIndex() {
-			return queueIndex;
-		}
-
-		public void setQueueIndex(int index) {
-			queueIndex = index;
-		}
-	}
-
+public class PriorityOpportunisticContactGraphRouter extends OpportunisticContactGraphRouter {
+	
 	public class PriorityOutduct extends ContactGraphRouter.Outduct {
 
 		private LinkedList<Message> bulkQueue;
@@ -268,17 +209,15 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 
 	}
 
-	protected LinkedList<OverbookingStructure> listOverbooked = new LinkedList<OverbookingStructure>();
-
-	public PriorityContactGraphRouter(ActiveRouter r) {
+	public PriorityOpportunisticContactGraphRouter(ActiveRouter r) {
 		super(r);
 	}
 
-	public PriorityContactGraphRouter(Settings s) {
+	public PriorityOpportunisticContactGraphRouter(Settings s) {
 		super(s);
 
 	}
-
+	
 	@Override
 	public void updateOutducts(Collection<DTNHost> hosts) {
 		// if (outducts.size() != hosts.size())
@@ -402,12 +341,9 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 			expired.clear();
 		}
 	}
-
-	// called after every cgrForward, this method call cgrForward too so there
-	// will be a chain of calls.
-	// every cgrForward can add a new overbooking structure to the list so i
-	// have to handle the last one
-	// in order to close the chain.
+	
+	protected LinkedList<OverbookingStructure> listOverbooked = new LinkedList<OverbookingStructure>();
+	
 	public void manageOverbooking() {
 		if (listOverbooked.isEmpty())
 			return;
@@ -418,9 +354,9 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 		while (current.getProtect() > 0.0) {
 			if (current.getWhichQueue() == 0) {
 				current.subtractFromProtected(((PriorityOutduct) getOutducts()[current.getToHost().getAddress()])
-						.getBulkQueue().get(current.queueIndex).getSize());
+						.getBulkQueue().get(current.getQueueIndex()).getSize());
 				current.setQueueIndex(current.getQueueIndex() - 1);
-				if (current.queueIndex < 0) {
+				if (current.getQueueIndex() < 0) {
 					if (((PriorityOutduct) getOutducts()[current.getToHost().getAddress()]).getNormalBacklog() > 0) {
 						current.setWhichQueue(1);
 						current.setQueueIndex(((PriorityOutduct) getOutducts()[current.getToHost().getAddress()])
@@ -436,9 +372,9 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 
 			} else if (current.getWhichQueue() == 1) {
 				current.subtractFromProtected(((PriorityOutduct) getOutducts()[current.getToHost().getAddress()])
-						.getNormalQueue().get(current.queueIndex).getSize());
+						.getNormalQueue().get(current.getQueueIndex()).getSize());
 				current.setQueueIndex(current.getQueueIndex() - 1);
-				if (current.queueIndex < 0) {
+				if (current.getQueueIndex() < 0) {
 					current.setWhichQueue(2);
 					current.setQueueIndex(((PriorityOutduct) getOutducts()[current.getToHost().getAddress()])
 							.getExpeditedQueue().size() - 1);
@@ -447,7 +383,7 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 				continue;
 			} else {
 				current.subtractFromProtected(((PriorityOutduct) getOutducts()[current.getToHost().getAddress()])
-						.getExpeditedQueue().get(current.queueIndex).getSize());
+						.getExpeditedQueue().get(current.getQueueIndex()).getSize());
 				current.setQueueIndex(current.getQueueIndex() - 1);
 			}
 		}
@@ -456,11 +392,11 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 
 		if (current.getWhichQueue() == 0) {
 			m = ((PriorityOutduct) getOutducts()[current.getToHost().getAddress()]).getBulkQueue()
-					.get(current.queueIndex);
+					.get(current.getQueueIndex());
 			current.subtractFromOverbooked(m.getSize());
 			current.setQueueIndex(current.getQueueIndex() - 1);
 
-			if (current.queueIndex < 0 && current.isOverbooked()) {
+			if (current.getQueueIndex() < 0 && current.isOverbooked()) {
 				if (((PriorityOutduct) getOutducts()[current.getToHost().getAddress()]).getNormalBacklog() > 0) {
 					current.setWhichQueue(1);
 					current.setQueueIndex(
@@ -474,11 +410,11 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 			}
 		} else if (current.getWhichQueue() == 1) {
 			m = ((PriorityOutduct) getOutducts()[current.getToHost().getAddress()]).getNormalQueue()
-					.get(current.queueIndex);
+					.get(current.getQueueIndex());
 			current.subtractFromOverbooked(m.getSize());
 			current.setQueueIndex(current.getQueueIndex() - 1);
 
-			if (current.queueIndex < 0 && current.isOverbooked()) {
+			if (current.getQueueIndex() < 0 && current.isOverbooked()) {
 				current.setWhichQueue(2);
 				current.setQueueIndex(
 						((PriorityOutduct) getOutducts()[current.getToHost().getAddress()]).getExpeditedQueue().size()
@@ -487,7 +423,7 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 
 		} else {
 			m = ((PriorityOutduct) getOutducts()[current.getToHost().getAddress()]).getExpeditedQueue()
-					.get(current.queueIndex);
+					.get(current.getQueueIndex());
 			current.subtractFromOverbooked(m.getSize());
 			current.setQueueIndex(current.getQueueIndex() - 1);
 		}
@@ -500,7 +436,7 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 		// position if necessary
 		// used in insertMessageintoOutduct
 		((PriorityMessage) m).setReforwarded(true);
-		((PriorityMessage) m).setReforwardedFrom(current.toHost);
+		((PriorityMessage) m).setReforwardedFrom(current.getToHost());
 		((PriorityMessage) m).setReforwardIndex(current.getQueueIndex() + 1);
 		cgrForward(m, m.getTo());
 	}
@@ -524,12 +460,4 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 		listOverbooked.add(entry);
 		return;
 	}
-
-	@Override
-	public int cgrForward(Message m, DTNHost terminusNode) {
-		Libcgr.cgrForward(this.getHost().getAddress(), m, terminusNode.getAddress());
-		manageOverbooking();
-		return 1;
-	}
-
 }
