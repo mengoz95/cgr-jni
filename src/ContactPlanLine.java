@@ -1,4 +1,5 @@
 
+@SuppressWarnings("rawtypes")
 public class ContactPlanLine implements Comparable{
 	private int from;
 	private int to;

@@ -91,7 +91,6 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 
 			if (((PriorityMessage) message).isReforwarded()
 					&& ((PriorityMessage) message).getReforwardedFrom().equals(this.getHost())) {
-				// if the message was from this outduct gets its place back
 				int index = ((PriorityMessage) message).getReforwardIndex();
 				switch (((PriorityMessage) message).getPriority()) {
 				case 0:
@@ -110,8 +109,6 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 
 				((PriorityMessage) message).setReforwarded(false);
 				MessageStatus status = getMessageStatus(message);
-				// message.updateProperty(OUTDUCT_REF_PROP,
-				// getHost().getAddress());
 				status.addOutductReference(this);
 				setTotalEnqueuedBytes(getTotalEnqueuedBytes() + message.getSize());
 				return 0;
@@ -135,14 +132,12 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 			boolean thisIsLimbo = (getHost() == null);
 			MessageStatus status = getMessageStatus(message);
 			if (thisIsLimbo) {
-				// message.updateProperty(OUTDUCT_REF_PROP, LIMBO_ID);
 				status.addOutductReference(this);
 				return 0;
 			}
 			if (removeFromLimbo && isMessageIntoLimbo(message)) {
 				removeMessageFromLimbo(message);
 			}
-			// message.updateProperty(OUTDUCT_REF_PROP, host.getAddress());
 			status.addOutductReference(this);
 			setTotalEnqueuedBytes(getTotalEnqueuedBytes() + message.getSize());
 			return 0;
@@ -159,7 +154,6 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 					m1 = iter.next();
 					if (m1.equals(m)) {
 						iter.remove();
-						// m.updateProperty(OUTDUCT_REF_PROP, NONE_ID);
 						status.removeOutductReference(this);
 						bulkBacklog -= m.getSize();
 						setTotalEnqueuedBytes(getTotalEnqueuedBytes() - m.getSize());
@@ -176,7 +170,6 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 					m1 = iter.next();
 					if (m1.equals(m)) {
 						iter.remove();
-						// m.updateProperty(OUTDUCT_REF_PROP, NONE_ID);
 						status.removeOutductReference(this);
 						normalBacklog -= m.getSize();
 						setTotalEnqueuedBytes(getTotalEnqueuedBytes() - m.getSize());
@@ -193,7 +186,6 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 					m1 = iter.next();
 					if (m1.equals(m)) {
 						iter.remove();
-						// m.updateProperty(OUTDUCT_REF_PROP, NONE_ID);
 						status.removeOutductReference(this);
 						expeditedBacklog -= m.getSize();
 						setTotalEnqueuedBytes(getTotalEnqueuedBytes() - m.getSize());
@@ -217,16 +209,6 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 	
 	@Override
 	public void updateOutducts(Collection<DTNHost> hosts) {
-		// if (outducts.size() != hosts.size())
-		// {
-		// for (DTNHost h : hosts)
-		// {
-		// if (! outducts.keySet().contains(h))
-		// {
-		// outducts.put(h, new PriorityOutduct(h));
-		// }
-		// }
-		// }
 		if (outducts.length != Utils.getAllNodes().size() + 1) {
 			outducts = new Outduct[Utils.getAllNodes().size() + 1];
 			outducts[0] = limbo;
@@ -244,33 +226,10 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 	@Override
 	protected List<Tuple<Message, Connection>> getMessagesForConnected() {
 		if (getNrofMessages() == 0 || getConnections().size() == 0) {
-			/* no messages -> empty list */
 			return new ArrayList<Tuple<Message, Connection>>(0);
 		}
 
-		List<Tuple<Message, Connection>> forTuples = new ArrayList<Tuple<Message, Connection>>();
-//		if (firstOutductIndex == null)
-//			firstOutductIndex = outducts.firstKey();
-//		Outduct o = outducts.get(firstOutductIndex);
-//		Connection c;
-//		for (int j = 0; j < outducts.size(); j++) {
-//			if ((c = getConnectionTo(o.getHost())) != null && o.getEnqueuedMessageNum() > 0) {
-//				if (((PriorityOutduct) o).getExpeditedQueue().size() != 0)
-//					forTuples.add(
-//							new Tuple<Message, Connection>(((PriorityOutduct) o).getExpeditedQueue().getFirst(), c));
-//
-//				else if (((PriorityOutduct) o).getNormalQueue().size() != 0)
-//					forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct) o).getNormalQueue().getFirst(), c));
-//
-//				else if (((PriorityOutduct) o).getBulkQueue().size() != 0)
-//					forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct) o).getBulkQueue().getFirst(), c));
-//			}
-//			DTNHost next = outducts.higherKey(o.getHost());
-//			if (next == null)
-//				next = outducts.firstKey();
-//			o = outducts[next.getAddress()];
-//		}
-		
+		List<Tuple<Message, Connection>> forTuples = new ArrayList<Tuple<Message, Connection>>();		
 		Connection[] connections = getSortedConnectionsArray();
 		Outduct o;
 		for (Connection c : connections)
@@ -290,7 +249,6 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 		
 	}
 
-	// Priorities in limbo are not treated
 	@Override
 	protected void checkExpiredRoutes() {
 		List<Message> expired = new ArrayList<>(getNrofMessages());
@@ -326,11 +284,6 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 			}
 			
 			for (Message m : expired) {
-				/*
-				 * If a route has expired for a message, I put it into the limbo
-				 * and invoke CGR, which possibly remove the message from limbo
-				 * and enqueue it into an outduct if a route has been found.
-				 */
 				o.removeMessageFromOutduct(m);
 				putMessageIntoLimbo(m);
 				cgrForward(m, m.getTo());
@@ -429,19 +382,12 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 		if (!current.isOverbooked())
 			listOverbooked.remove(current);
 
-		// set this parameters in order to insert the message in the previous
-		// position if necessary
-		// used in insertMessageintoOutduct
 		((PriorityMessage) m).setReforwarded(true);
 		((PriorityMessage) m).setReforwardedFrom(current.getToHost());
 		((PriorityMessage) m).setReforwardIndex(current.getQueueIndex() + 1);
 		cgrForward(m, m.getTo());
 	}
 
-	// this method is called via JNI, it adds a new overbooking Structure that
-	// will be handled in manageOverbooking()
-	// if the c library is compiled without the ONE_SIMULATION option this
-	// method is never called
 	public void setManageOverbooking(DTNHost to, double overbooked, double protect) {
 		OverbookingStructure entry = new OverbookingStructure(to, overbooked, protect);
 		if (((PriorityOutduct) getOutducts()[to.getAddress()]).getBulkBacklog() > 0) {
@@ -456,7 +402,5 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 		}
 		listOverbooked.add(entry);
 		return;
-	}
-	
-	
+	}	
 }

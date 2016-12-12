@@ -197,6 +197,7 @@ public class ContactGraphRouter extends ActiveRouter {
 			outduct.removeMessageFromOutduct(message);
 			if (isMessageIntoLimbo(message))
 			{
+				@SuppressWarnings("unused")
 				Message temp = limbo.getMessage(message.getId());				
 			}
 			putMessageIntoLimbo(message);
@@ -216,10 +217,12 @@ public class ContactGraphRouter extends ActiveRouter {
 
 	public class MessageStatus
 	{
+		@SuppressWarnings("unused")
 		private Message message;
 		private HashSet<Integer> xmitCopies = new HashSet<>();
 		private double dlvConfidence;
 		private boolean isInLimbo;
+		@SuppressWarnings("unused")
 		private boolean epidemicFlag;
 		private long routeTimelimit; // temp
 		private HashMap<Outduct, RouteExpirationEvent> outductsReference = 

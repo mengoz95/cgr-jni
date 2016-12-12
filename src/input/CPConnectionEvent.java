@@ -11,6 +11,11 @@ import core.World;
 
 public class CPConnectionEvent extends ConnectionEvent
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public Settings settings;
 	
 	/** Speed of the connection between two nodes. It's simply the datarate used by the network interface */

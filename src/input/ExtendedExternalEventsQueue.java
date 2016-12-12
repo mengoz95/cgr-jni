@@ -16,6 +16,7 @@ public class ExtendedExternalEventsQueue extends ExternalEventsQueue
 {
 	private File eventsFile;
 	private CPEventsReader reader;
+	@SuppressWarnings("unused")
 	private List<ExternalEvent> queue;
 	private int nrofPreload;
 	private boolean allEventsRead = false;
