@@ -450,7 +450,7 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 						.getExpeditedQueue().get(current.queueIndex).getSize());
 				current.setQueueIndex(current.getQueueIndex() - 1);
 			}
-		}
+		}//while
 
 		Message m = null;
 

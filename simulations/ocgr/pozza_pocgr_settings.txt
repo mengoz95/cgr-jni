@@ -1,0 +1,54 @@
+Scenario.name = PriorityOpportunisticContactGraphRouter20range3M
+Group.router = PriorityOpportunisticContactGraphRouter
+OpportunisticContactGraphRouter.epidemicDropBack = false
+OpportunisticContactGraphRouter.debug = false
+Scenario.endTime = 43200
+Scenario.nrofHostGroups = 1
+
+# "Bluetooth" interface for all nodes
+btInterface.type = SimpleBroadcastInterface
+# Transmit speed of 2 Mbps = 250kBps
+btInterface.transmitSpeed = 250k
+btInterface.transmitRange = 20
+
+Group.bufferSize = 3M
+Group.waitTime = 0, 120
+# All nodes have the bluetooth interface
+Group.nrofInterfaces = 1
+Group.interface1 = btInterface
+# Walking speeds
+Group.speed = 1.5, 2.5
+# Message TTL in minutes
+Group.msgTtl = 360
+
+# PER GRUPPO
+Group.nrofHosts = 20
+
+# group1 (pedestrians) specific settings
+Group1.groupID = pedestrian
+
+# one message generator for each priority level: Bulk, Normal and Expedited
+Events.nrof = 3
+# generator of "Bulk" messages
+Events1.class = PriorityMessageEventGenerator
+Events1.interval = 1,160
+Events1.size = 100k
+Events1.hosts = 1,20
+Events1.prefix = B
+Events1.priority = 0
+# generator of "Normal" messages
+Events2.class = PriorityMessageEventGenerator
+Events2.interval = 1,255
+Events2.size = 50k
+Events2.hosts = 1,20
+Events2.prefix = N
+Events2.priority = 1
+# generator of "Expedited" messages
+Events3.class = PriorityMessageEventGenerator
+Events3.interval = 1,300
+Events3.size = 10k
+Events3.hosts = 1,20
+Events3.prefix = E
+Events3.priority = 2
+
+Report.report1 = PriorityMessageStatsReport
