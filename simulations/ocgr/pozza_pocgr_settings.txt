@@ -1,4 +1,4 @@
-Scenario.name = PriorityOpportunisticContactGraphRouter20range3M
+Scenario.name = PriorityOpportunisticContactGraphRouter
 Group.router = PriorityOpportunisticContactGraphRouter
 OpportunisticContactGraphRouter.epidemicDropBack = false
 OpportunisticContactGraphRouter.debug = false

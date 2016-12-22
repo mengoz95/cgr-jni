@@ -10,8 +10,13 @@ import core.Message;
 import core.MessageListener;
 import core.PriorityMessage;
 
-//extends report because all the attributes of MessageStatsReport are private
-//It's a copy of MessageStatsReport for the most part
+/**
+ * Extends report because all the attributes of MessageStatsReport are private.
+ * It's a copy of MessageStatsReport for the most part.
+ * 
+ * @author Federico Fiorini
+ *
+ */
 public class PriorityMessageStatsReport extends Report implements MessageListener {
 
 	private Map<String, Double> creationTimes;

@@ -1,7 +1,3 @@
-/*
- * Copyright 2010 Aalto University, ComNet
- * Released under GPLv3. See LICENSE.txt for details.
- */
 package report;
 
 
@@ -10,14 +6,6 @@ import core.Message;
 import core.MessageListener;
 import core.SimClock;
 
-/**
- * Report for generating different kind of total statistics about message
- * relaying performance. Messages that were created during the warm up period
- * are ignored.
- * <P><strong>Note:</strong> if some statistics could not be created (e.g.
- * overhead ratio if no messages were delivered) "NaN" is reported for
- * double values and zero for integer median(s).
- */
 public class SimpleMessageStatsReport extends Report implements MessageListener {
 	
 	private int nrofDropped;

@@ -98,6 +98,7 @@ typedef struct
 	int		hopCount;	/*	# hops from dest. node.	*/
 } ProximateNode;
 
+// Rodolfi's optimizations ?
 static uvast	_minCapacity(int payloadClass)
 {
 	static uvast	capacityFloor[PAYLOAD_CLASSES] =
@@ -196,6 +197,7 @@ static void	clearRoutingObjects(PsmPartition ionwm)
 	}
 }
 
+// this method is called "getCgrVdb" in ION 3.5.0 but has the same body
 static CgrVdb	*getCgrVcb()
 {
 	static char	*name = CGRVDB_NAME;
@@ -299,12 +301,14 @@ static int	getApplicableRange(IonCXref *contact, unsigned int *owlt)
 	return -1;
 }
 
+// in ION 3.5.0 non c'è "int payloadClass" fra gli argomenti
 static int	computeDistanceToTerminus(IonCXref *rootContact,
 			CgrContactNote *rootWork, IonNode *terminusNode,
 			int payloadClass, CgrRoute *route, CgrTrace *trace)
 {
 	PsmPartition	ionwm = getIonwm();
 	IonVdb		*ionvdb = getIonVdb();
+	// in ION 3.5.0 non c'è "capacityFloor"
 	uvast		capacityFloor = _minCapacity(payloadClass);
 	IonCXref	*current;
 	CgrContactNote	*currentWork;

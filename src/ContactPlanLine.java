@@ -1,16 +1,22 @@
-
 @SuppressWarnings("rawtypes")
-public class ContactPlanLine implements Comparable{
+/**
+ * The contact plan creation consists of a stand - alone Java application
+ * including two classes, ContactPlanCreator.java and ContactPlanLine.java. The
+ * last one is just a support class representing a line of the contact plan, and
+ * the collections of all the lines is the contact plan itself.
+ * 
+ * @author Jako Jo Messina
+ * 
+ */
+public class ContactPlanLine implements Comparable {
 	private int from;
 	private int to;
-	
+
 	private int start;
 	private int stop;
-	
+
 	private int datarate;
-	
-	
-	
+
 	public ContactPlanLine(int start, int stop, int from, int to, int datarate) {
 		this.from = from;
 		this.to = to;
@@ -18,11 +24,11 @@ public class ContactPlanLine implements Comparable{
 		this.stop = stop;
 		this.datarate = datarate;
 	}
-	
+
 	public double getDatarate() {
 		return datarate;
 	}
-	
+
 	public int getFrom() {
 		return from;
 	}
@@ -63,32 +69,31 @@ public class ContactPlanLine implements Comparable{
 	public String toString() {
 		return "a contact " + "\t+" + start + "\t+" + stop + "\t" + from + "\t" + to + "\t" + datarate;
 	}
-	
-	public String toStringTwoWays (){
+
+	public String toStringTwoWays() {
 		return "a contact " + "\t+" + start + "\t+" + stop + "\t" + to + "\t" + from + "\t" + datarate;
 	}
-	
-	
+
 	public String toStringRange() {
 		return "a range " + "\t+" + start + "\t+" + stop + "\t" + from + "\t" + to + "\t" + "1";
 	}
-	
 
 	@Override
 	public int compareTo(Object o) {
 		ContactPlanLine cpl = (ContactPlanLine) o;
 		int risultato;
-		if((this.getStart() - cpl.getStart()) == 0)
-				return this.getFrom() - cpl.getFrom();
-		else{
-			risultato = (int)(this.getStart() - cpl.getStart());
+		if ((this.getStart() - cpl.getStart()) == 0)
+			return this.getFrom() - cpl.getFrom();
+		else {
+			risultato = (int) (this.getStart() - cpl.getStart());
 			return risultato;
 		}
 	}
-	
-	public boolean connectionUp (int node1, int node2){
-		if(((this.getFrom() == node1) && (this.getTo() == node2)) ||(( this.getFrom() == node2) && (this.getTo() == node1)))
-			if(this.getStop() == 0)
+
+	public boolean connectionUp(int node1, int node2) {
+		if (((this.getFrom() == node1) && (this.getTo() == node2))
+				|| ((this.getFrom() == node2) && (this.getTo() == node1)))
+			if (this.getStop() == 0)
 				return true;
 		return false;
 	}
