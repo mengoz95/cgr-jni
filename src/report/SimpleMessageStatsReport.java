@@ -6,6 +6,10 @@ import core.Message;
 import core.MessageListener;
 import core.SimClock;
 
+/**
+ * No documentation exists about this class!
+ *
+ */
 public class SimpleMessageStatsReport extends Report implements MessageListener {
 	
 	private int nrofDropped;

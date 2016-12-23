@@ -16,8 +16,29 @@ import core.Settings;
 import core.SimClock;
 import util.Tuple;
 
+/**
+ * Implements CGR with priorities and overbooking management. This class extends
+ * the ContactGraphRouter class to include the support of messages with the
+ * priority attribute. It required both Java and native code extensions or
+ * modifications. It also includes the Overbooking Management CGR enhancement,
+ * lacking in the existing CGR class, as it is strictly related to priorities.
+ * 
+ * @author Alessandro Berlati
+ *
+ */
 public class PriorityContactGraphRouter extends ContactGraphRouter {
 
+	/**
+	 * The Overbooking Management is an option included in ION in the libcgr.c
+	 * and its functions work directly on the ION outducts. However, in The ONE
+	 * the outducts are in the Java environment, thus it resulted convenient to
+	 * integrate the Overbooking Management feature into the
+	 * PriorityContactGraphRouter.OverbookingStructure class moving a significant part of the code from C
+	 * to Java.
+	 * 
+	 * @author Alessandro Berlati
+	 *
+	 */
 	public static class OverbookingStructure {
 		// class to manage overbooking
 		// every message that adds overbooking to an outduct create a new
@@ -80,6 +101,14 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 		}
 	}
 
+	/**
+	 * The new PriorityOutduct has a different list for each priority class,
+	 * instead of just one like the class ContactGraphRouter.Outduct. All
+	 * methods related to bundle insertion and removal have been redefined.
+	 * 
+	 * @author Alessandro Berlati
+	 *
+	 */
 	public class PriorityOutduct extends ContactGraphRouter.Outduct {
 
 		private LinkedList<Message> bulkQueue;
@@ -313,37 +342,40 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 		}
 
 		List<Tuple<Message, Connection>> forTuples = new ArrayList<Tuple<Message, Connection>>();
-//		if (firstOutductIndex == null)
-//			firstOutductIndex = outducts.firstKey();
-//		Outduct o = outducts.get(firstOutductIndex);
-//		Connection c;
-//		for (int j = 0; j < outducts.size(); j++) {
-//			if ((c = getConnectionTo(o.getHost())) != null && o.getEnqueuedMessageNum() > 0) {
-//				if (((PriorityOutduct) o).getExpeditedQueue().size() != 0)
-//					forTuples.add(
-//							new Tuple<Message, Connection>(((PriorityOutduct) o).getExpeditedQueue().getFirst(), c));
-//
-//				else if (((PriorityOutduct) o).getNormalQueue().size() != 0)
-//					forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct) o).getNormalQueue().getFirst(), c));
-//
-//				else if (((PriorityOutduct) o).getBulkQueue().size() != 0)
-//					forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct) o).getBulkQueue().getFirst(), c));
-//			}
-//			DTNHost next = outducts.higherKey(o.getHost());
-//			if (next == null)
-//				next = outducts.firstKey();
-//			o = outducts[next.getAddress()];
-//		}
-		
+		// if (firstOutductIndex == null)
+		// firstOutductIndex = outducts.firstKey();
+		// Outduct o = outducts.get(firstOutductIndex);
+		// Connection c;
+		// for (int j = 0; j < outducts.size(); j++) {
+		// if ((c = getConnectionTo(o.getHost())) != null &&
+		// o.getEnqueuedMessageNum() > 0) {
+		// if (((PriorityOutduct) o).getExpeditedQueue().size() != 0)
+		// forTuples.add(
+		// new Tuple<Message, Connection>(((PriorityOutduct)
+		// o).getExpeditedQueue().getFirst(), c));
+		//
+		// else if (((PriorityOutduct) o).getNormalQueue().size() != 0)
+		// forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct)
+		// o).getNormalQueue().getFirst(), c));
+		//
+		// else if (((PriorityOutduct) o).getBulkQueue().size() != 0)
+		// forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct)
+		// o).getBulkQueue().getFirst(), c));
+		// }
+		// DTNHost next = outducts.higherKey(o.getHost());
+		// if (next == null)
+		// next = outducts.firstKey();
+		// o = outducts[next.getAddress()];
+		// }
+
 		Connection[] connections = getSortedConnectionsArray();
 		Outduct o;
-		for (Connection c : connections)
-		{
+		for (Connection c : connections) {
 			o = getOutducts()[c.getOtherNode(getHost()).getAddress()];
-			if ((getConnectionTo(o.getHost())) != null && o.getEnqueuedMessageNum() > 0) 
-			{
+			if ((getConnectionTo(o.getHost())) != null && o.getEnqueuedMessageNum() > 0) {
 				if (((PriorityOutduct) o).getExpeditedQueue().size() != 0)
-					forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct) o).getExpeditedQueue().getFirst(), c));
+					forTuples.add(
+							new Tuple<Message, Connection>(((PriorityOutduct) o).getExpeditedQueue().getFirst(), c));
 				else if (((PriorityOutduct) o).getNormalQueue().size() != 0)
 					forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct) o).getNormalQueue().getFirst(), c));
 				else if (((PriorityOutduct) o).getBulkQueue().size() != 0)
@@ -351,7 +383,7 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 			}
 		}
 		return forTuples;
-		
+
 	}
 
 	// Priorities in limbo are not treated
@@ -363,7 +395,8 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 				for (Message m : ((PriorityOutduct) o).getExpeditedQueue()) {
 					MessageStatus status = getMessageStatus(m);
 					long fwdTimelimit = status.getRouteTimelimit();
-					if (fwdTimelimit == 0) // This Message hasn't been routed yet
+					if (fwdTimelimit == 0) // This Message hasn't been routed
+											// yet
 						return;
 					if (SimClock.getIntTime() > fwdTimelimit) {
 						expired.add(m);
@@ -372,7 +405,8 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 				for (Message m : ((PriorityOutduct) o).getNormalQueue()) {
 					MessageStatus status = getMessageStatus(m);
 					long fwdTimelimit = status.getRouteTimelimit();
-					if (fwdTimelimit == 0) // This Message hasn't been routed yet
+					if (fwdTimelimit == 0) // This Message hasn't been routed
+											// yet
 						return;
 					if (SimClock.getIntTime() > fwdTimelimit) {
 						expired.add(m);
@@ -381,14 +415,15 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 				for (Message m : ((PriorityOutduct) o).getBulkQueue()) {
 					MessageStatus status = getMessageStatus(m);
 					long fwdTimelimit = status.getRouteTimelimit();
-					if (fwdTimelimit == 0) // This Message hasn't been routed yet
+					if (fwdTimelimit == 0) // This Message hasn't been routed
+											// yet
 						return;
 					if (SimClock.getIntTime() > fwdTimelimit) {
 						expired.add(m);
 					}
 				}
 			}
-			
+
 			for (Message m : expired) {
 				/*
 				 * If a route has expired for a message, I put it into the limbo
@@ -450,7 +485,7 @@ public class PriorityContactGraphRouter extends ContactGraphRouter {
 						.getExpeditedQueue().get(current.queueIndex).getSize());
 				current.setQueueIndex(current.getQueueIndex() - 1);
 			}
-		}//while
+		} // while
 
 		Message m = null;
 

@@ -25,7 +25,16 @@ import core.SimClock;
 import util.Tuple;
 
 /**
- * 
+ * Implements Contact Graph Routing without priorities and overbooking management.
+ * In every ContactGraphRouter all the outducts are collected inside an array.
+ * Moreover, every router contains one more outduct, the limbo, hosting the
+ * messages whose intended route has expired, or no known route to destination,
+ * with respective methods for adding e removing messages from it. Note that
+ * this policy differs from the current CGR implementation in ION, where bundles
+ * with no known route to destination are purged to save memory space. This
+ * drastic policy has not been implemented in ONE, as considered likely too
+ * drastic for terrestrial environments, although justified in space
+ * communications.
  * 
  * @author Jako Jo Messina
  *

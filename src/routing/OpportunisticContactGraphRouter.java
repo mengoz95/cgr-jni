@@ -10,6 +10,17 @@ import core.Message;
 import core.Settings;
 import core.SimClock;
 
+/**
+ * Implements Opportunistic CGR without priorities and overbooking management.
+ * In order to simulate OCGR the ContactGraphRouter class was extended.
+ * The new OpportunisticContactGraphRouter class provides methods to
+ * inform the ION libraries of the acquisition or the loss of a discovered
+ * contact. It also provide a mechanism to support a epidemic routing drop back,
+ * if no routes can be found for a given bundle.
+ * 
+ * @author Michele Rodolfi
+ *
+ */
 public class OpportunisticContactGraphRouter extends ContactGraphRouter {
 
 	/**

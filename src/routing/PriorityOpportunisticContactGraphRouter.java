@@ -16,8 +16,27 @@ import core.SimClock;
 import routing.PriorityContactGraphRouter.OverbookingStructure;
 import util.Tuple;
 
+/**
+ * Similarly to PriorityContactGraphRouter, this class extends the
+ * OpportunisticContactGraphRouter class to include the support of messages with
+ * the priority attribute and the Overbooking Management support, both lacking
+ * in the existing OpportunisticContactGraphRouter.
+ * 
+ * @author Simone Pozza
+ *
+ */
 public class PriorityOpportunisticContactGraphRouter extends OpportunisticContactGraphRouter {
-	
+
+	/**
+	 * Since Java does not support multiple inheritance, the new class contains
+	 * the inner class PriorityOutduct, like PriorityContactGraphRouter does,
+	 * which extends ContactGraphRouter.Outduct. The class
+	 * PriorityContactGraphRouter.OverbookingStructure is static so the code was
+	 * not replicated but the class was simply imported.
+	 * 
+	 * @author Simone Pozza
+	 *
+	 */
 	public class PriorityOutduct extends ContactGraphRouter.Outduct {
 
 		private LinkedList<Message> bulkQueue;
@@ -206,7 +225,7 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 		super(s);
 
 	}
-	
+
 	@Override
 	public void updateOutducts(Collection<DTNHost> hosts) {
 		if (outducts.length != Utils.getAllNodes().size() + 1) {
@@ -229,16 +248,15 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 			return new ArrayList<Tuple<Message, Connection>>(0);
 		}
 
-		List<Tuple<Message, Connection>> forTuples = new ArrayList<Tuple<Message, Connection>>();		
+		List<Tuple<Message, Connection>> forTuples = new ArrayList<Tuple<Message, Connection>>();
 		Connection[] connections = getSortedConnectionsArray();
 		Outduct o;
-		for (Connection c : connections)
-		{
+		for (Connection c : connections) {
 			o = getOutducts()[c.getOtherNode(getHost()).getAddress()];
-			if ((getConnectionTo(o.getHost())) != null && o.getEnqueuedMessageNum() > 0) 
-			{
+			if ((getConnectionTo(o.getHost())) != null && o.getEnqueuedMessageNum() > 0) {
 				if (((PriorityOutduct) o).getExpeditedQueue().size() != 0)
-					forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct) o).getExpeditedQueue().getFirst(), c));
+					forTuples.add(
+							new Tuple<Message, Connection>(((PriorityOutduct) o).getExpeditedQueue().getFirst(), c));
 				else if (((PriorityOutduct) o).getNormalQueue().size() != 0)
 					forTuples.add(new Tuple<Message, Connection>(((PriorityOutduct) o).getNormalQueue().getFirst(), c));
 				else if (((PriorityOutduct) o).getBulkQueue().size() != 0)
@@ -246,7 +264,7 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 			}
 		}
 		return forTuples;
-		
+
 	}
 
 	@Override
@@ -257,7 +275,8 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 				for (Message m : ((PriorityOutduct) o).getExpeditedQueue()) {
 					MessageStatus status = getMessageStatus(m);
 					long fwdTimelimit = status.getRouteTimelimit();
-					if (fwdTimelimit == 0) // This Message hasn't been routed yet
+					if (fwdTimelimit == 0) // This Message hasn't been routed
+											// yet
 						return;
 					if (SimClock.getIntTime() > fwdTimelimit) {
 						expired.add(m);
@@ -266,7 +285,8 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 				for (Message m : ((PriorityOutduct) o).getNormalQueue()) {
 					MessageStatus status = getMessageStatus(m);
 					long fwdTimelimit = status.getRouteTimelimit();
-					if (fwdTimelimit == 0) // This Message hasn't been routed yet
+					if (fwdTimelimit == 0) // This Message hasn't been routed
+											// yet
 						return;
 					if (SimClock.getIntTime() > fwdTimelimit) {
 						expired.add(m);
@@ -275,14 +295,15 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 				for (Message m : ((PriorityOutduct) o).getBulkQueue()) {
 					MessageStatus status = getMessageStatus(m);
 					long fwdTimelimit = status.getRouteTimelimit();
-					if (fwdTimelimit == 0) // This Message hasn't been routed yet
+					if (fwdTimelimit == 0) // This Message hasn't been routed
+											// yet
 						return;
 					if (SimClock.getIntTime() > fwdTimelimit) {
 						expired.add(m);
 					}
 				}
 			}
-			
+
 			for (Message m : expired) {
 				o.removeMessageFromOutduct(m);
 				putMessageIntoLimbo(m);
@@ -291,9 +312,9 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 			expired.clear();
 		}
 	}
-	
+
 	protected LinkedList<OverbookingStructure> listOverbooked = new LinkedList<OverbookingStructure>();
-	
+
 	public void manageOverbooking() {
 		if (listOverbooked.isEmpty())
 			return;
@@ -402,5 +423,5 @@ public class PriorityOpportunisticContactGraphRouter extends OpportunisticContac
 		}
 		listOverbooked.add(entry);
 		return;
-	}	
+	}
 }
