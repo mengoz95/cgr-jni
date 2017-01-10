@@ -17,6 +17,12 @@
 	ALL RIGHTS RESERVED.  U.S. Government Sponsorship
 	acknowledged.
 									*/
+
+/*
+ * This file differs from that of the current version of ION (3.5.0), so using the "diff" command I compared the two versions of this file.
+ * Across the whole file, these differences are marked with a comment starting with the word "DIFF" and containing a brief description.
+ * Differences related to the comments have been omitted.
+ - Simone Pozza */
 #include "cgr.h"
 
 #define	MAX_TIME	((unsigned int) ((1U << 31) - 1))
@@ -62,6 +68,7 @@ typedef struct
 	time_t		arrivalTime;	/*	As from time(2).	*/
 	PsmAddress	hops;		/*	SM list: IonCXref addr	*/
 	uvast		maxCapacity;
+	/* DIFF: the following field is not present */
 	int		payloadClass;
 } CgrRoute;		/*	IonNode routingObject is list of these.	*/
 
@@ -80,6 +87,7 @@ typedef struct
 
 typedef struct
 {
+	/* DIFF: the following field is of type "struct timeval" */
 	time_t		lastLoadTime;	/*	Add/del contacts/ranges	*/
 	PsmAddress	routeLists;	/*	SM list: CgrRoute list	*/
 } CgrVdb;
@@ -98,7 +106,7 @@ typedef struct
 	int		hopCount;	/*	# hops from dest. node.	*/
 } ProximateNode;
 
-// Rodolfi's optimizations ?
+/* DIFF: the following function is not present */
 static uvast	_minCapacity(int payloadClass)
 {
 	static uvast	capacityFloor[PAYLOAD_CLASSES] =
@@ -197,7 +205,7 @@ static void	clearRoutingObjects(PsmPartition ionwm)
 	}
 }
 
-// this method is called "getCgrVdb" in ION 3.5.0 but has the same body
+/* DIFF: this method is called "getCgrVdb" but has the same body */
 static CgrVdb	*getCgrVcb()
 {
 	static char	*name = CGRVDB_NAME;
@@ -301,14 +309,14 @@ static int	getApplicableRange(IonCXref *contact, unsigned int *owlt)
 	return -1;
 }
 
-// in ION 3.5.0 non c'è "int payloadClass" fra gli argomenti
+/* DIFF: argument "int payloadClass" is not present */
 static int	computeDistanceToTerminus(IonCXref *rootContact,
 			CgrContactNote *rootWork, IonNode *terminusNode,
 			int payloadClass, CgrRoute *route, CgrTrace *trace)
 {
 	PsmPartition	ionwm = getIonwm();
 	IonVdb		*ionvdb = getIonVdb();
-	// in ION 3.5.0 non c'è "capacityFloor"
+	/* DIFF: the following field is not present */
 	uvast		capacityFloor = _minCapacity(payloadClass);
 	IonCXref	*current;
 	CgrContactNote	*currentWork;
@@ -331,6 +339,7 @@ static int	computeDistanceToTerminus(IonCXref *rootContact,
 
 	/*	This is an implementation of Dijkstra's Algorithm.	*/
 
+	/* DIFF: the following call does not contain the argument "payloadClass" */
 	TRACE(CgrBeginRoute, payloadClass);
 	current = rootContact;
 	currentWork = rootWork;
@@ -369,6 +378,7 @@ static int	computeDistanceToTerminus(IonCXref *rootContact,
 				continue;
 			}
 
+/* DIFF: the following if block is not present */
 if (current == rootContact && contact->confidence < 1.0)
 {
 	continue;	/*	First contact must be certain.		*/
@@ -398,6 +408,7 @@ if (current == rootContact && contact->confidence < 1.0)
 					(contact->toTime - contact->fromTime);
 			}
 
+			/* DIFF: the following if block is not present */
 			if (work->capacity < capacityFloor)
 			{
 				TRACE(CgrIgnoreContact, CgrCapacityTooSmall);
@@ -577,12 +588,14 @@ if (current == rootContact && contact->confidence < 1.0)
 		route->fromTime = contact->fromTime;
 		route->toTime = earliestEndTime;
 		route->maxCapacity = maxCapacity;
+		/* DIFF: the following statement is not present */
 		route->payloadClass = payloadClass;
 	}
 
 	return 0;
 }
 
+/* DIFF: the argument "int payloadClass" is not present */
 static int	findNextBestRoute(PsmPartition ionwm, IonCXref *rootContact,
 			CgrContactNote *rootWork, IonNode *terminusNode,
 			int payloadClass, PsmAddress *routeAddr,
@@ -591,6 +604,7 @@ static int	findNextBestRoute(PsmPartition ionwm, IonCXref *rootContact,
 	PsmAddress	addr;
 	CgrRoute	*route;
 
+/* DIFF: the following comment is not present */
 //printf("Node %lu: findNextBestRoute to: %lu\n", getOwnNodeNbr(), terminusNode->nodeNbr);
 	*routeAddr = 0;		/*	Default.			*/
 	addr = psm_zalloc(ionwm, sizeof(CgrRoute));
@@ -612,6 +626,7 @@ static int	findNextBestRoute(PsmPartition ionwm, IonCXref *rootContact,
 
 	/*	Run Dijkstra search.					*/
 
+	/* DIFF: the argument "payloadClass" is not present */
 	if (computeDistanceToTerminus(rootContact, rootWork, terminusNode,
 			payloadClass, route, trace) < 0)
 	{
@@ -631,6 +646,7 @@ static int	findNextBestRoute(PsmPartition ionwm, IonCXref *rootContact,
 	}
 	else
 	{
+		/* DIFF: "route->payloadClass" does not appear among the arguments */
 		TRACE(CgrAcceptRoute, route->toNodeNbr,
 				(unsigned int)(route->fromTime),
 				(unsigned int)(route->arrivalTime),
@@ -690,6 +706,7 @@ static PsmAddress	loadRouteList(IonNode *terminusNode, time_t currentTime,
 {
 	PsmPartition	ionwm = getIonwm();
 	IonVdb		*ionvdb = getIonVdb();
+	/* DIFF: the following statement is "CgrVdb	*cgrvdb = getCgrVdb();" */
 	CgrVdb		*cgrvdb = getCgrVcb(CGRVDB_NAME);
 	int		payloadClass;
 	PsmAddress	elt;
@@ -705,6 +722,7 @@ static PsmAddress	loadRouteList(IonNode *terminusNode, time_t currentTime,
 
 	CHKZERO(ionvdb);
 	CHKZERO(cgrvdb);
+/* DIFF: the following comment is missing */
 //printf("Node %lu: loadRouteList to: %lu\n", getOwnNodeNbr(), terminusNode->nodeNbr);
 
 	/*	First create route list for this destination node.	*/
@@ -740,9 +758,11 @@ static PsmAddress	loadRouteList(IonNode *terminusNode, time_t currentTime,
 	rootContact.fromNode = getOwnNodeNbr();
 	rootContact.toNode = rootContact.fromNode;
 	rootWork.arrivalTime = currentTime;
+
+	/* DIFF: the following for cycle is completely different (ends at line 911) */
 	for (payloadClass = 0; payloadClass < PAYLOAD_CLASSES; payloadClass++)
 	{
-if (payloadClass != 1) continue;
+		if (payloadClass != 1) continue;
 		/*	For each series of searches, clear Dijkstra
 		 *	work areas for all contacts.			*/
 
@@ -888,7 +908,7 @@ if (payloadClass != 1) continue;
 				work->visited = 0;
 			}
 		}
-	}
+	} // if
 
 	return terminusNode->routingObject;
 }
@@ -896,6 +916,7 @@ if (payloadClass != 1) continue;
 /*		Functions for identifying viable proximate nodes
  *		for forward transmission of a given bundle.		*/
 
+/* DIFF: "int payloadClass" does not appear among the arguments */
 static int	recomputeRouteForContact(uvast contactToNodeNbr,
 			time_t contactFromTime, IonNode *terminusNode,
 			time_t currentTime, int payloadClass, CgrTrace *trace)
@@ -1004,6 +1025,7 @@ static int	recomputeRouteForContact(uvast contactToNodeNbr,
 	rootContact.fromNode = getOwnNodeNbr();
 	rootContact.toNode = rootContact.fromNode;
 	rootWork.arrivalTime = currentTime;
+	/* DIFF: "payloadClass" does not appear among the arguments */
 	if (findNextBestRoute(ionwm, &rootContact, &rootWork, terminusNode,
 			payloadClass, &routeAddr, trace) < 0)
 	{
@@ -1293,6 +1315,7 @@ static time_t	computeArrivalTime(CgrRoute *route, Bundle *bundle,
 			return 0;
 		}
 
+		/* DIFF: the left side of the following assignment is different */
 		arrivalTime = transmitTime + owlt;
 
 		/*	Now check next contact in the end-to-end path.	*/
@@ -1567,6 +1590,7 @@ static int	identifyProximateNodes(IonNode *terminusNode, Bundle *bundle,
 		nextElt = sm_list_next(ionwm, elt);
 		addr = sm_list_data(ionwm, elt);
 		route = (CgrRoute *) psp(ionwm, addr);
+		/* DIFF: "route->payloadClass" does not appear among the arguments */
 		TRACE(CgrCheckRoute, route->payloadClass, route->toNodeNbr,
 				(unsigned int)(route->fromTime),
 				(unsigned int)(route->arrivalTime));
@@ -1577,6 +1601,7 @@ static int	identifyProximateNodes(IonNode *terminusNode, Bundle *bundle,
 
 			contactToNodeNbr = route->toNodeNbr;
 			contactFromTime = route->fromTime;
+			/* DIFF: the following assignment is not present */
 			payloadClass = route->payloadClass;
 			if (route->hops)
 			{
@@ -1585,6 +1610,7 @@ static int	identifyProximateNodes(IonNode *terminusNode, Bundle *bundle,
 
 			psm_free(ionwm, addr);
 			sm_list_delete(ionwm, elt, NULL, NULL);
+			/* DIFF: "payloadClass" does not appear among the arguments */
 			switch (recomputeRouteForContact(contactToNodeNbr,
 					contactFromTime, terminusNode,
 					currentTime, payloadClass, trace))
@@ -2081,6 +2107,8 @@ static int	sendCriticalBundle(Bundle *bundle, Object bundleObj,
 	}
 
 	lyst_destroy(proximateNodes);
+
+	/* DIFF: the following if block is completely different*/
 	if (bundle->dlvConfidence > 0.0
 	&& bundle->dlvConfidence < MIN_NET_DELIVERY_CONFIDENCE)
 	{
@@ -2118,6 +2146,7 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 			CgrTrace *trace, int preview)
 {
 	IonVdb		*ionvdb = getIonVdb();
+	/* DIFF: the following assignment is different but the name of the field is the same */
 	CgrVdb		*cgrvdb = getCgrVcb(CGRVDB_NAME);
 	IonNode		*terminusNode;
 	PsmAddress	nextNode;
@@ -2161,6 +2190,7 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 	TRACE(CgrBuildRoutes, terminusNodeNbr, bundle->payload.length,
 			(unsigned int)(atTime));
 
+	/* DIFF: the following if block is completely different */
 	if (ionvdb->lastEditTime > cgrvdb->lastLoadTime) 
 	{
 		/*	Contact plan has been modified, so must discard
@@ -2365,6 +2395,7 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 				putErrmsg("Can't queue for neighbor.", NULL);
 				return -1;
 			}
+/* DIFF: the following #ifdef block is not present; this block is necessary to support overbooking management in The ONE simulator */
 #ifdef ONE_SIMULATION
 			double 	overbooked = (ONE_GIG * selectedNeighbor->overbooked.gigs)
 					+ selectedNeighbor->overbooked.units;
@@ -2393,6 +2424,7 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 		TRACE(CgrNoProximateNode);
 	}
 
+	/* DIFF: the following if block is completely different */
 	if (bundle->dlvConfidence < MIN_NET_DELIVERY_CONFIDENCE
 	&& bundle->id.source.c.nodeNbr != bundle->destination.c.nodeNbr)
 	{
@@ -2505,6 +2537,7 @@ float	cgr_prospect(uvast terminusNodeNbr, unsigned int deadline)
 
 void	cgr_start()
 {
+	/* DIFF: the following statement is different */
 	oK(getCgrVcb(CGRVDB_NAME));
 }
 
@@ -2517,6 +2550,7 @@ const char	*cgr_tracepoint_text(CgrTraceType traceType)
 		" payloadLength:%u atTime:%u",
 	[CgrInvalidTerminusNode] = "    INVALID terminus node",
 
+	/* DIFF: the following assignment is different */
 	[CgrBeginRoute] = "  ROUTE payloadClass:%d",
 	[CgrConsiderRoot] = "    ROOT fromNode:" UVAST_FIELDSPEC
 		" toNode:" UVAST_FIELDSPEC,
@@ -2528,12 +2562,14 @@ const char	*cgr_tracepoint_text(CgrTraceType traceType)
 	[CgrHop] = "    HOP fromNode:" UVAST_FIELDSPEC " toNode:"
 		UVAST_FIELDSPEC,
 
+	/* DIFF: the following assignment is different */
 	[CgrAcceptRoute] = "    ACCEPT firstHop:" UVAST_FIELDSPEC
 		" fromTime:%u arrivalTime:%u maxCapacity:" UVAST_FIELDSPEC
 		" payloadClass:%d",
 	[CgrDiscardRoute] = "    DISCARD route",
 
 	[CgrIdentifyProximateNodes] = "IDENTIFY deadline:%u",
+	/* DIFF: the following assignment is different */
 	[CgrCheckRoute] = "  CHECK payloadClass:%d firstHop:" UVAST_FIELDSPEC
 		" fromTime:%u arrivalTime:%u",
 	[CgrRecomputeRoute] = "  RECOMPUTE",
@@ -2569,6 +2605,7 @@ const char	*cgr_reason_text(CgrReason reason)
 	[CgrContactEndsEarly] = "contact ends before data arrives",
 	[CgrSuppressed] = "contact is suppressed",
 	[CgrVisited] = "contact has been visited",
+	/* DIFF: the following assignment is not present */
 	[CgrCapacityTooSmall] = "capacity is too low for payload class",
 	[CgrNoRange] = "no range for contact",
 

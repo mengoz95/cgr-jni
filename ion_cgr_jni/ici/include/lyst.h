@@ -1,13 +1,10 @@
 /*
- * list.h
+ * This is the header of the lyst library. 
+ * It is very similar to the ION implementation but Lyst 
+ * and LystElt structures point to a jobject.
  *
  *  Created on: 28 ott 2015
  *      Author: michele
- */
-
-/**
- * Questo e' l'header della libreria delle liste, praticamente ho copiato quello di Lyst in ION.
- * Ho solo cambiato le strutture Lyst e LystElt in modo che puntino a un jobject.
  */
 
 #include <jni.h>
