@@ -1,0 +1,17 @@
+Scenario.name = pcgr_cp_fiorini_settings
+Scenario.endTime = 10800
+
+# This means that the simulation will not create a connection if two nodes are in the range each other
+Scenario.simulateConnections = false
+# This means the simulation nodes should not move, since the connections are scheduled and they will be up and down accord to your connection file/ contact plan
+Group.movementModel = StationaryMovement
+Group.nodeLocation = 0,0
+# If you are already using a MessageEventGenerator, you will need two events generators, one for MessageEventGenerator and one for reading connections from file
+# So if you are using PriorityContactGraphRouter you should have 4 events generators: 3 PriorityMessageEventGenerator plus one
+Events.nrof = 2
+Events1.class = MessageEventGenerator
+# The ExtendedExternalEventsQueue class is responsible for reading the events from the contact plan file
+# You can use CPEventsReader instead of ExtendedExternalEventsQueue
+Events2.class = ExtendedExternalEventsQueue
+Events2.filePath = /path/to/contact_plan.txt
+ExtendedExternalEventsQueue.nrofPreload = 1000
