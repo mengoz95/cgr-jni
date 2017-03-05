@@ -61,98 +61,166 @@ public class CPEventsReader extends StandardEventsReader {
 	 * delays are negligible in terrestrial communications and not implemented
 	 * in ONE.
 	 */
-	@Override
 	public List<ExternalEvent> readEvents(int nrof) {
 		ArrayList<ExternalEvent> events = new ArrayList<ExternalEvent>(nrof);
-		int eventsRead = 0;
+		String startTimeStr_cont1, startTimeStr_cont2;
+		String endTimeStr_cont1, endTimeStr_cont2;
+		String host1Addr_cont1, host1Addr_cont2;
+		String host2Addr_cont1, host2Addr_cont2;
+		String transmitSpeedStr_cont1, transmitSpeedStr_cont2;
+		long startTime_cont1 = 0, startTime_cont2 = 0, endTime_cont1 = 0, endTime_cont2 = 0;
+		int host1_cont1 = 0, host1_cont2 = 0, host2_cont1 = 0, host2_cont2 = 0, transmitSpeed_cont1 = 0,
+				transmitSpeed_cont2 = 0;
+		String startTimeStrRANGE, endTimeStrRANGE, host1AddrRANGE, host2AddrRANGE, distStrRANGE;
+		long startTimeRANGE = 0, endTimeRANGE = 0;
+		int host1RANGE = 0, host2RANGE = 0, distRANGE;
+		String line, letter, action;
+		StringTokenizer stk = null;
+		int range_is_present = 0;
 
-		String line;
 		try {
-			while (((line = this.reader.readLine()) != null) && eventsRead < nrof) {
-				StringTokenizer stk = new StringTokenizer(line, "\t ");
+			while ((line = this.reader.readLine()) != null) {
+				/**
+				 * RANGE line
+				 */
+				stk = new StringTokenizer(line, "\t ");
 
-				String letter = stk.nextToken();
+				letter = stk.nextToken();
 				if (!letter.equals("a"))
 					throw new IllegalArgumentException("Must be ADD (a)");
 
-				String action = stk.nextToken();
+				action = stk.nextToken();
 
-				/**
-				 * Do not perform anything: unused TODO use "range" in order to
-				 * specify further informations about Contact Plan
-				 */
 				if (action.equals(RANGE)) {
-					String startTimeStr = stk.nextToken();
-					String endTimeStr = stk.nextToken();
-					String host1Addr = stk.nextToken();
-					String host2Addr = stk.nextToken();
-					String distStr = stk.nextToken();
+					range_is_present++;
 
-					startTimeStr = startTimeStr.substring(1);
-					endTimeStr = endTimeStr.substring(1);
+					startTimeStrRANGE = stk.nextToken();
+					endTimeStrRANGE = stk.nextToken();
+					host1AddrRANGE = stk.nextToken();
+					host2AddrRANGE = stk.nextToken();
+					distStrRANGE = stk.nextToken();
 
-					long startTime = Long.parseLong(startTimeStr);
-					long endTime = Long.parseLong(endTimeStr);
-					if (startTime > endTime)
+					startTimeStrRANGE = startTimeStrRANGE.substring(1);
+					endTimeStrRANGE = endTimeStrRANGE.substring(1);
+
+					startTimeRANGE = Long.parseLong(startTimeStrRANGE);
+					endTimeRANGE = Long.parseLong(endTimeStrRANGE);
+
+					if (startTimeRANGE > endTimeRANGE)
 						throw new IllegalArgumentException(timeError);
 
-					int host1 = Integer.parseInt(host1Addr);
-					int host2 = Integer.parseInt(host2Addr);
-					if (host2 < host1)
+					host1RANGE = Integer.parseInt(host1AddrRANGE) - 1;
+					host2RANGE = Integer.parseInt(host2AddrRANGE) - 1;
+					if (host2RANGE < host1RANGE)
 						throw new IllegalArgumentException(rangeHostError);
-					if (host1 < 0 && host2 < 0)
+					if (host1RANGE < 0 && host2RANGE < 0)
 						throw new SimError("Unknown Hosts");
 
-					int dist = Integer.parseInt(distStr);
-					if (dist != distance)
+					distRANGE = Integer.parseInt(distStrRANGE);
+					if (distRANGE != distance)
 						throw new IllegalArgumentException("Must be 1 for terrestrial transmissions");
-				} else if (action.equals(CONTACT)) {
-					/**
-					 * Parameters of a Contact Plan, read with StringTokenizer
-					 * StartTime of contact, in simulation time EndTime of
-					 * contact, in simulation time Host1 and Host2: DTNHosts
-					 * involved in the connection event TransmitSpeed of the
-					 * network interface used (default: bluetooth)
-					 */
+				}
 
-					String startTimeStr = stk.nextToken();
-					String endTimeStr = stk.nextToken();
-					String host1Addr = stk.nextToken();
-					String host2Addr = stk.nextToken();
-					String transmitSpeedStr = stk.nextToken();
+				if (action.equals(CONTACT)) {
 
-					startTimeStr = startTimeStr.substring(1);
-					endTimeStr = endTimeStr.substring(1);
+					startTimeStr_cont1 = stk.nextToken();
+					endTimeStr_cont1 = stk.nextToken();
+					host1Addr_cont1 = stk.nextToken();
+					host2Addr_cont1 = stk.nextToken();
+					transmitSpeedStr_cont1 = stk.nextToken();
 
-					long startTime = Long.parseLong(startTimeStr);
-					long endTime = Long.parseLong(endTimeStr);
-					if (startTime > endTime)
+					startTimeStr_cont1 = startTimeStr_cont1.substring(1);
+					endTimeStr_cont1 = endTimeStr_cont1.substring(1);
+
+					startTime_cont1 = Long.parseLong(startTimeStr_cont1);
+					endTime_cont1 = Long.parseLong(endTimeStr_cont1);
+					if (startTime_cont1 > endTime_cont1)
 						throw new IllegalArgumentException(timeError);
 
-					int host1 = Integer.parseInt(host1Addr) - 1;
-					int host2 = Integer.parseInt(host2Addr) - 1;
-					if (host1 < 0 && host2 < 0)
+					host1_cont1 = Integer.parseInt(host1Addr_cont1) - 1;
+					host2_cont1 = Integer.parseInt(host2Addr_cont1) - 1;
+					if (host1_cont1 < 0 && host2_cont1 < 0)
 						throw new SimError("Unknown Hosts");
 
-					int transmitSpeed = Integer.parseInt(transmitSpeedStr);
-					if (transmitSpeed < 0)
+					transmitSpeed_cont1 = Integer.parseInt(transmitSpeedStr_cont1);
+					if (transmitSpeed_cont1 < 0)
 						throw new IllegalArgumentException("TransmitSpeed must be higher than zero");
 
-					events.add(new CPConnectionEvent(host1, host2, null, true, startTime, transmitSpeed));
-					events.add(new CPConnectionEvent(host1, host2, null, false, endTime, transmitSpeed));
-				} else
-					throw new SimError("Unknown Action" + action + " specified");
+					line = this.reader.readLine();
+					stk = new StringTokenizer(line, "\t ");
+
+					letter = stk.nextToken();
+					if (!letter.equals("a"))
+						throw new IllegalArgumentException("Must be ADD (a)");
+
+					action = stk.nextToken();
+
+					if (action.equals(CONTACT)) {
+
+						startTimeStr_cont2 = stk.nextToken();
+						endTimeStr_cont2 = stk.nextToken();
+						host1Addr_cont2 = stk.nextToken();
+						host2Addr_cont2 = stk.nextToken();
+						transmitSpeedStr_cont2 = stk.nextToken();
+
+						startTimeStr_cont2 = startTimeStr_cont2.substring(1);
+						endTimeStr_cont2 = endTimeStr_cont2.substring(1);
+
+						startTime_cont2 = Long.parseLong(startTimeStr_cont2);
+						endTime_cont2 = Long.parseLong(endTimeStr_cont2);
+						if (startTime_cont2 > endTime_cont2)
+							throw new IllegalArgumentException(timeError);
+
+						host1_cont2 = Integer.parseInt(host1Addr_cont2) - 1;
+						host2_cont2 = Integer.parseInt(host2Addr_cont2) - 1;
+						if (host1_cont2 < 0 && host2_cont2 < 0)
+							throw new SimError("Unknown Hosts");
+
+						transmitSpeed_cont2 = Integer.parseInt(transmitSpeedStr_cont2);
+						if (transmitSpeed_cont2 < 0)
+							throw new IllegalArgumentException("TransmitSpeed must be higher than zero");
+					} else {
+						throw new IllegalArgumentException("Expected second contact");
+					}
+
+					/**
+					 * principal control, if it isn't right, it will throws an
+					 * exception
+					 */
+					if (startTime_cont1 != startTime_cont2)
+						throw new IllegalArgumentException("No right start time: contact plan error");
+
+					if (endTime_cont1 != endTime_cont2)
+						throw new IllegalArgumentException("No right end time: contact plan error");
+
+					if ((host1_cont1 != host2_cont2) || (host2_cont1 != host1_cont2))
+						throw new IllegalArgumentException("No right order: contact plan error");
+
+					if (transmitSpeed_cont1 != transmitSpeed_cont2)
+						throw new IllegalArgumentException("No right speed: contact plan error");
+
+					events.add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
+							true, startTime_cont1, transmitSpeed_cont1));
+					events.add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
+							false, endTime_cont1, transmitSpeed_cont1));
+
+				}
+
 			}
 		} catch (IOException e) {
 			throw new SimError("Reading from external file failed!");
 		}
+
+		/**
+		 * no range is found in all file
+		 */
+		
+		if ( range_is_present == 0 && stk != null )
+			throw new IllegalArgumentException("expected at least one \"a range\": contact plan error");
+
 		return events;
 	}
 
-	/**
-	 * This method closes the reader associated to the external contact plan; it
-	 * must be called after reading the file to avoid wasting memory resources.
-	 */
 	@Override
 	public void close() {
 		try {

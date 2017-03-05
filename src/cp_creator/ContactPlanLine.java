@@ -1,3 +1,4 @@
+package cp_creator;
 @SuppressWarnings("rawtypes")
 /**
  * The contact plan creation consists of a stand - alone Java application
@@ -75,7 +76,14 @@ public class ContactPlanLine implements Comparable {
 	}
 
 	public String toStringRange() {
-		return "a range " + "\t+" + start + "\t+" + stop + "\t" + from + "\t" + to + "\t" + "1";
+		String res = null;
+
+		if (to > from)
+			res = "a range " + "\t+" + start + "\t+" + stop + "\t" + from + "\t" + to + "\t" + "1";
+		else
+			res = "a range " + "\t+" + start + "\t+" + stop + "\t" + to + "\t" + from + "\t" + "1";
+
+		return res;
 	}
 
 	@Override

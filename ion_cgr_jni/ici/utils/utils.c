@@ -79,10 +79,10 @@ static IonPartitions * updateIonPartitions()
 		(*jniEnv)->DeleteGlobalRef(jniEnv, ionP->partition[SDR_PSM_PARTITION]);
 		ionP->partition[WM_PSM_PARTITION] =
 				(*jniEnv)->NewGlobalRef(jniEnv,
-				getIonPsmPartition(ionP->nodeNbr, WM_PSM_PARTITION));
+				getIonPsmPartition((jlong) ionP->nodeNbr, WM_PSM_PARTITION));
 		ionP->partition[SDR_PSM_PARTITION] =
 				(*jniEnv)->NewGlobalRef(jniEnv,
-				getIonPsmPartition(ionP->nodeNbr, SDR_PSM_PARTITION));
+				getIonPsmPartition((jlong) ionP->nodeNbr, SDR_PSM_PARTITION));
 		setIonPartitions(ionP);
 	}
 	return ionP;
@@ -116,14 +116,14 @@ PsmPartition getIonPsmPartition(long nodeNum, int partNum)
 	}
 	jobject partition =
 			(*jniEnv)->CallStaticObjectMethod(jniEnv,
-					psmPartitionManagerClass, method, nodeNum, partNum);
+					psmPartitionManagerClass, method, (jlong) nodeNum, partNum);
 	if (partition == NULL)
 	{
 		method = (*jniEnv)->GetStaticMethodID(jniEnv,
 				psmPartitionManagerClass, "newPartition",
 				"(JI)Lcgr_jni/psm/PsmPartition;");
 		partition = (*jniEnv)->CallStaticObjectMethod(jniEnv,
-				psmPartitionManagerClass, method, nodeNum, partNum);
+				psmPartitionManagerClass, method, (jlong) nodeNum, partNum);
 	}
 	return (PsmPartition) partition;
 }
@@ -143,7 +143,7 @@ PsmPartition newIonPsmPartition(long nodeNum, int partNum)
 				"(JI)Lcgr_jni/psm/PsmPartition;");
 	}
 	jobject partition = (*jniEnv)->CallStaticObjectMethod(jniEnv,
-			psmPartitionManagerClass, method, nodeNum, partNum);
+			psmPartitionManagerClass, method, (jlong) nodeNum, partNum);
 	return (PsmPartition) partition;
 }
 
@@ -161,17 +161,17 @@ void eraseIonPsmPartition(long nodeNum, int partNum)
 				psmPartitionManagerClass, "erasePartition","(JI)V");
 	}
 	(*jniEnv)->CallStaticVoidMethod(jniEnv, psmPartitionManagerClass,
-			method, nodeNum, partNum);
+			method, (jlong) nodeNum, partNum);
 }
 
 void initIonWm()
 {
-	newIonPsmPartition(getNodeNum(), WM_PSM_PARTITION);
+	newIonPsmPartition((jlong) getNodeNum(), WM_PSM_PARTITION);
 	initIonPartitions();
 }
 void destroyIonWm()
 {
-	eraseIonPsmPartition(getNodeNum(), WM_PSM_PARTITION);
+	eraseIonPsmPartition((jlong) getNodeNum(), WM_PSM_PARTITION);
 }
 PsmPartition getIonWm()
 {
@@ -181,12 +181,12 @@ PsmPartition getIonWm()
 
 void initIonSdr()
 {
-	newIonPsmPartition(getNodeNum(), SDR_PSM_PARTITION);
+	newIonPsmPartition((jlong) getNodeNum(), SDR_PSM_PARTITION);
 	initIonPartitions();
 }
 void destroyIonSdr()
 {
-	eraseIonPsmPartition(getNodeNum(), SDR_PSM_PARTITION);
+	eraseIonPsmPartition((jlong) getNodeNum(), SDR_PSM_PARTITION);
 }
 Sdr	getIonSdr()
 {

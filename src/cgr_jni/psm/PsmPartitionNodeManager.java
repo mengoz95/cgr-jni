@@ -15,15 +15,13 @@ public class PsmPartitionNodeManager {
 		return nodeNum;
 	}
 	
-	public PsmPartition newPartition(int partNum)
-	{
+	public PsmPartition newPartition(int partNum) {
 		PsmPartition partition = new PsmPartition(partNum);
 		addPartition(partition);
 		return partition;
 	}
 
-	public PsmPartition getPartition(int partNum)
-	{
+	public PsmPartition getPartition(int partNum) {
 		return partitions.get(partNum);
 	}
 	

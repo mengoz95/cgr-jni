@@ -1,3 +1,9 @@
+#
+# Use this file to run multiple simulations with different TTLs (Time-To-Live)
+# In this example you can simulate 7 times; for each simulation, will be used different parameters
+# (e.g. first simulation (1/7 Run) msgTtl = 3600, second simulation (2/7 Run) msgTtl = 7400... and so on )
+# You have only to set like arguments "-b 7 ttl.txt"
+#
 
 Scenario.ttlSeconds = true
 Group.msgTtl = [3600;7400;10800;14400;18000;21600;25200]

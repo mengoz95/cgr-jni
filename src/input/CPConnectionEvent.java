@@ -34,8 +34,8 @@ public class CPConnectionEvent extends ConnectionEvent {
 
 	@Override
 	public void processEvent(World world) {
-		DTNHost from = world.getNodeByAddress(this.fromAddr);
-		DTNHost to = world.getNodeByAddress(this.toAddr);
+		DTNHost from =  world.getNodeByAddress(this.fromAddr);
+		DTNHost to =  world.getNodeByAddress(this.toAddr);
 
 		from.forceConnection(to, interfaceId, this.isUp);
 	}

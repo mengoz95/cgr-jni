@@ -93,15 +93,17 @@ extern "C" {
 #endif	/*	RTEMS or uClibc						*/
 
 #if (!LONG_LONG_OKAY)
-typedef long			vast;
-typedef unsigned long		uvast;
+#include<stdint.h>
+typedef int64_t			vast;
+typedef uint64_t		uvast;
 #define	VAST_FIELDSPEC		"%ld"
 #define	UVAST_FIELDSPEC		"%lu"
 #define	strtovast(x)		strtol(x, NULL, 0)
 #define	strtouvast(x)		strtoul(x, NULL, 0)
 #elif (SPACE_ORDER < 3)	/*	32-bit machines.			*/
-typedef long long		vast;
-typedef unsigned long long	uvast;
+#include<stdint.h>
+typedef int64_t			vast;
+typedef uint64_t		uvast;
 #if (defined(mingw) || defined(ION4WIN))
 #define	VAST_FIELDSPEC		"%I64d"
 #define	UVAST_FIELDSPEC		"%I64u"
@@ -112,8 +114,9 @@ typedef unsigned long long	uvast;
 #define	strtovast(x)		strtoll(x, NULL, 0)
 #define	strtouvast(x)		strtoull(x, NULL, 0)
 #else			/*	64-bit machines.			*/
-typedef long			vast;
-typedef unsigned long		uvast;
+#include<stdint.h>
+typedef int64_t			vast;
+typedef uint64_t		uvast;
 #define	VAST_FIELDSPEC		"%ld"
 #define	UVAST_FIELDSPEC		"%lu"
 #define	strtovast(x)		strtol(x, NULL, 0)

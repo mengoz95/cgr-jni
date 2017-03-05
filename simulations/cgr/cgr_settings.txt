@@ -1,3 +1,10 @@
+#
+# Use this file to run the ContactGraphRouter
+# The ContactGraphRouter needs a contact plan, you can either write it directly, or you can convert a LogFile of One by means of CPCreator.sh
+#
+
 Scenario.name = ContactGraphRouter
 Group.router = ContactGraphRouter
-ContactGraphRouter.ContactPlanPath = /home/michele/git/cgr-jni/simulations/cgr/cp.txt
+
+#Set your path to the contact plan
+ContactGraphRouter.ContactPlanPath = /Path/To/contact_plan.txt

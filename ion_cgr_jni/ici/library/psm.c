@@ -37,7 +37,7 @@ void Psm_free(const char * s, int n,
 			(*jniEnv)->FindClass(jniEnv, PsmPartitionClass);
 	jmethodID method = (*jniEnv)->GetMethodID(jniEnv,
 			psmPartitionClass, "psmFree","(J)V");
-	(*jniEnv)->CallVoidMethod(jniEnv, partition, method, address);
+	(*jniEnv)->CallVoidMethod(jniEnv, partition, method, (jlong) address);
 	free((void *)address);
 }
 
@@ -58,7 +58,7 @@ int	psm_locate(PsmPartition partition , char *objName,
 	jstring name = (*jniEnv)->NewStringUTF(jniEnv, objName);
 	jlong result = (*jniEnv)->CallLongMethod(jniEnv,
 			partition, method, name);
-	if (result < 0)
+	if (result == -1)
 	{
 		*entryElt = 0;
 		return 0;

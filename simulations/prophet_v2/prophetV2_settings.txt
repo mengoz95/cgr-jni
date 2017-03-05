@@ -1,0 +1,9 @@
+#
+# Use this file to run PRoPHETV2
+#
+
+Scenario.name = PRoPHETV2
+Group.router = ProphetV2Router
+
+ProphetV2Router.secondsInTimeUnit = 30
+

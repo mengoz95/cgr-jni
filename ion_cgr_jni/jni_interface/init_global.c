@@ -66,18 +66,18 @@ void destroy_node()
 	destroyIonSdr();
 }
 
-long getNodeNum()
+jlong getNodeNum()
 {
-	long * result = (long *) pthread_getspecific(nodeNum_key);
+	jlong * result = (jlong *) pthread_getspecific(nodeNum_key);
 	return * result;
 }
 
-void setNodeNum(long nodeNum_new)
+void setNodeNum(jlong nodeNum_new)
 {
-	long * nodeNumPtr;
+	jlong * nodeNumPtr;
 	if ((nodeNumPtr = pthread_getspecific(nodeNum_key)) == NULL)
 	{
-		nodeNumPtr = (long *) malloc(sizeof(long));
+		nodeNumPtr = (jlong *) malloc(sizeof(jlong));
 		pthread_setspecific(nodeNum_key, nodeNumPtr);
 	}
 	*nodeNumPtr = nodeNum_new;

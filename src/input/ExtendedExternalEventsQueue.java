@@ -21,8 +21,6 @@ import core.Settings;
 public class ExtendedExternalEventsQueue extends ExternalEventsQueue {
 	private File eventsFile;
 	private CPEventsReader reader;
-	@SuppressWarnings("unused")
-	private List<ExternalEvent> queue;
 	private int nrofPreload;
 	private boolean allEventsRead = false;
 
@@ -32,7 +30,9 @@ public class ExtendedExternalEventsQueue extends ExternalEventsQueue {
 
 	public ExtendedExternalEventsQueue(String filePath, int nrofPreload) {
 		super(filePath, nrofPreload);
+		init(filePath);
 	}
+	
 
 	/**
 	 * This method creates an association between an instance of this class and

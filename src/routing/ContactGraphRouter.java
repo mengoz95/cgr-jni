@@ -22,6 +22,7 @@ import core.Message;
 import core.MessageListener;
 import core.Settings;
 import core.SimClock;
+import time.WriteOn;
 import util.Tuple;
 
 /**
@@ -918,10 +919,10 @@ public class ContactGraphRouter extends ActiveRouter {
 	}
 
 	public int cgrForward(Message m, DTNHost terminusNode) {
-		// System.out.println("Node " + getHost().getAddress() + ":
-		// cgrForward");
-		// return -1;
 		return Libcgr.cgrForward(this.getHost().getAddress(), m, terminusNode.getAddress());
 	}
 
 }
+
+
+

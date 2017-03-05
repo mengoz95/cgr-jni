@@ -29,7 +29,7 @@ public class ExtendedEventLogReport extends EventLogReport {
 	 * of external events read from the external file. IMPORTANT: must be used a
 	 * cast
 	 */
-	private File file = new File("/home/simone/cp.txt");
+	private File file = new File("mio_cp.txt");
 	private CPEventsReader reader = new CPEventsReader(file);
 	private List<ExternalEvent> events = reader.readEvents(500);
 

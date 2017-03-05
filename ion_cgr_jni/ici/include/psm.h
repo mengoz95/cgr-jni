@@ -16,6 +16,7 @@
 #define _PSM_H_
 
 #include <jni.h>
+#include <pthread.h>
 
 #include "platform.h"
 
