@@ -1,4 +1,4 @@
-package cp_creator;
+
 @SuppressWarnings("rawtypes")
 /**
  * The contact plan creation consists of a stand - alone Java application

@@ -1,4 +1,4 @@
-package cp_creator;
+
 
 import java.io.*;
 import java.util.SortedSet;
@@ -37,7 +37,7 @@ class ContactPlanCreator {
 		int start = 0;
 		int stop = 0;
 		BufferedReader br2 = new BufferedReader(new InputStreamReader(System.in));
-		System.out.println("--> Insert the full path of the input file for the Contact Plan Creator\n");
+		System.out.println("--> Insert the full path of the input file for the Contact Plan Creator");
 		inputFilePath = br2.readLine();
 
 		fr = new FileReader(inputFilePath);
@@ -102,6 +102,7 @@ class ContactPlanCreator {
 		}
 		bw.close();
 		pw.close();
+		System.out.println("Finished! all done!");
 
 	}
 }
