@@ -22,7 +22,6 @@ import core.Message;
 import core.MessageListener;
 import core.Settings;
 import core.SimClock;
-import time.WriteOn;
 import util.Tuple;
 
 /**
