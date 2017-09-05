@@ -1,8 +1,8 @@
 /*
  * platform.c
- *
+ *  Modified version of ION platform.c
  *  Created on: 18 nov 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail.com
  */
 
 #include "platform.h"

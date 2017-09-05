@@ -2,7 +2,7 @@
  * init_global.h
  *
  *  Created on: 23 nov 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail.com
  */
 
 #ifndef JNI_INCLUDE_INIT_GLOBAL_H_

@@ -1,4 +1,7 @@
-package cgr_jni.list;
+*
+ * Copyright 2017 University of Bologna
+ * Released under GPLv3. See LICENSE.txt for details.
+ */package cgr_jni.list;
 
 public class DefaultListElt {
 	

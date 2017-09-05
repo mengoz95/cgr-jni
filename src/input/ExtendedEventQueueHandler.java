@@ -1,4 +1,7 @@
-package input;
+*
+ * Copyright 2017 University of Bologna
+ * Released under GPLv3. See LICENSE.txt for details.
+ */package input;
 
 import java.util.ArrayList;
 import java.util.List;

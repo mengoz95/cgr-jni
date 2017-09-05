@@ -1,4 +1,7 @@
-package report;
+*
+ * Copyright 2017 University of Bologna
+ * Released under GPLv3. See LICENSE.txt for details.
+ */package report;
 
 import java.io.File;
 import java.util.List;

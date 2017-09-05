@@ -1,4 +1,7 @@
-package time;
+*
+ * Copyright 2017 University of Bologna
+ * Released under GPLv3. See LICENSE.txt for details.
+ */package time;
 
 import java.io.BufferedWriter;
 import java.io.File;

@@ -2,7 +2,7 @@
  * ONEtoION_interface.c
  *
  *  Created on: 17 dic 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail.com
  */
 
 #include <jni.h>

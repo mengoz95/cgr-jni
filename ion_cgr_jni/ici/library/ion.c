@@ -1,8 +1,8 @@
 /*
  * ion.c
- *
+ *  Heavily modified version of ION ion.c
  *  Created on: 18 nov 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail.com
  */
 
 #include <pthread.h>

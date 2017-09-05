@@ -2,7 +2,7 @@
  * normal_c.h
  *
  *  Created on: 28 ott 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail.com
  */
 
 #ifndef JNI_NORMAL_C_H_

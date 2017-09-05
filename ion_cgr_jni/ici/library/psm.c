@@ -2,7 +2,7 @@
  * psm.c
  *
  *  Created on: 03 nov 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail
  */
 #include "psm.h"
 

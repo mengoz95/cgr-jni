@@ -2,7 +2,7 @@
  *  cgr_Libcgr.c
  *
  *  Created on: 07 dic 2015
- *      Author: michele
+ *  Author: Michele Rodolfi University of Bologna michirod@gmail.com 
  */
 
 #include <jni.h>

@@ -2,7 +2,7 @@
  * chsim.h
  *
  *  Created on: 08 feb 2016
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail.com
  */
 
 #ifndef ION_CGR_JNI_JNI_INTERFACE_INCLUDE_CHSIM_H_

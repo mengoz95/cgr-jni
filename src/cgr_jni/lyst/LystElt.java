@@ -1,4 +1,7 @@
-package cgr_jni.lyst;
+*
+ * Copyright 2017 University of Bologna
+ * Released under GPLv3. See LICENSE.txt for details.
+ */package cgr_jni.lyst;
 
 /**
  * Classe che implementa un elemento di LinkedList

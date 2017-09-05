@@ -1,9 +1,13 @@
+*
+ * Copyright 2017 University of Bologna
+ * Released under GPLv3. See LICENSE.txt for details.
+
 
 @SuppressWarnings("rawtypes")
 /**
- * The contact plan creation consists of a stand - alone Java application
- * including two classes, ContactPlanCreator.java and ContactPlanLine.java. The
- * last one is just a support class representing a line of the contact plan, and
+ * The contact plan conversion consists of a stand - alone Java application
+ * including two classes, ContactPlanConverter.java and ContactPlanLine.java. The
+ * later is just a support class representing a line of the contact plan, and
  * the collections of all the lines is the contact plan itself.
  * 
  * @author Jako Jo Messina

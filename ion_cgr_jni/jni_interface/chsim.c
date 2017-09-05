@@ -2,7 +2,7 @@
  * chsim.c
  *
  *  Created on: 08 feb 2016
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail.com
  */
 
 #include <sdr.h>

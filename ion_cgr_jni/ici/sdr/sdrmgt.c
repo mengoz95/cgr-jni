@@ -1,8 +1,8 @@
 /*
  * sdrmgt.c
- *
+ *  Heavily modified version of ION sdrmgt.c
  *  Created on: 18 nov 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail
  */
 #include "sdrmgt.h"
 

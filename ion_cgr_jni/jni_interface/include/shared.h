@@ -2,7 +2,7 @@
  * shared.h
  *
  *  Created on: 28 ott 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail.com
  */
 
 #ifndef JNI_SHARED_H_

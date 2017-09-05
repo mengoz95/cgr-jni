@@ -1,4 +1,7 @@
-package cgr_jni.psm;
+*
+ * Copyright 2017 University of Bologna
+ * Released under GPLv3. See LICENSE.txt for details.
+ */package cgr_jni.psm;
 
 public class PsmAddress implements Comparable<PsmAddress>{
 	private long value;		// the psm address

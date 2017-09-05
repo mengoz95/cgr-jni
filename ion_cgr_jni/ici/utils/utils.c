@@ -2,7 +2,7 @@
  * utils.c
  *
  *  Created on: 04 nov 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail
  */
 
 #include "utils.h"

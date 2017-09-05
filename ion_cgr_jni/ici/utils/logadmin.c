@@ -2,6 +2,7 @@
 
 	logadmin.c:	contact list adminstration interface.
 
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail
 									*/
 
 #include "zco.h"

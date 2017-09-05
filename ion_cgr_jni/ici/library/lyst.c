@@ -4,9 +4,9 @@
  * manipulating doubly linked lists, we decided to use these classes for simulating the lyst
  * library through JNI function calls.
  * Lyst function declarations are in the lyst.h header file, implementations in lyst.c .
- *
+ * Heavily modified version of ION lyst.c
  *  Created on: 28 ott 2015
- *      Author: michele
+ *      Author: Michele Rodolfi University of Bologna michirod@gmail.com
  */
 
 #ifndef LYST_OPTIMIZATION
