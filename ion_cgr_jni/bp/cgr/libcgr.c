@@ -409,11 +409,14 @@ if (current == rootContact && contact->confidence < 1.0)
 			}
 
 			/* DIFF: the following if block is not present */
+
+			/*
 			if (work->capacity < capacityFloor)
 			{
 				TRACE(CgrIgnoreContact, CgrCapacityTooSmall);
 				continue;
 			}
+			*/
 
 			/*	Get OWLT between the nodes in contact,
 			 *	from applicable range in range index.	*/
