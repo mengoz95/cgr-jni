@@ -1,10 +1,10 @@
 /*
  * Copyright 2017 University of Bologna
  * Released under GPLv3. See LICENSE.txt for details.
- */package input;
+ */
+package input;
 
 import core.DTNHost;
-import core.Settings;
 import core.World;
 
 /**
@@ -22,29 +22,26 @@ public class CPConnectionEvent extends ConnectionEvent {
 
 	private static final long serialVersionUID = 1L;
 
-	public Settings settings;
 
 	/**
 	 * Speed of the connection between two nodes. It's simply the datarate used
 	 * by the network interface
 	 */
-	private int speed;
+	private int[] speed = new int[2];
 
-	public CPConnectionEvent(int from, int to, String interf, boolean up, double time, int speed) {
+	public CPConnectionEvent(int from, int to, String interf, boolean up, double time, int txSpeed, int rxSpeed) {
 		super(from, to, interf, up, time);
-		this.speed = speed;
+		this.speed[0] = txSpeed;
+		this.speed[1] = rxSpeed;
 	}
 
 	@Override
 	public void processEvent(World world) {
 		DTNHost from =  world.getNodeByAddress(this.fromAddr);
 		DTNHost to =  world.getNodeByAddress(this.toAddr);
-
-		from.forceConnection(to, interfaceId, this.isUp);
-	}
-
-	public int getSpeed() {
-		return this.speed;
+		from.getInterface(1).setTransmitSpeed(this.speed[0]);
+		to.getInterface(1).setTransmitSpeed(this.speed[1]);
+		from.forceConnection(to, null, this.isUp);
 	}
 
 	@Override

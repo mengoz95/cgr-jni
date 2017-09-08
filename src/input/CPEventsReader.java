@@ -1,7 +1,8 @@
 /*
  * Copyright 2017 University of Bologna
  * Released under GPLv3. See LICENSE.txt for details.
- */package input;
+ */
+package input;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,7 +22,7 @@ import core.SimError;
  * @author Federico Fiorini
  * 
  */
-public class CPEventsReader extends StandardEventsReader {
+public class CPEventsReader  implements ExternalEventsReader{
 	/** Identifier for ContactPlan Range between nodes */
 	public static final String RANGE = "range";
 	/** Identifier for ContactPlan Contact between nodes */
@@ -34,7 +35,8 @@ public class CPEventsReader extends StandardEventsReader {
 
 	/* BufferedReader needed for file's reading */
 	private BufferedReader reader;
-
+	/* Events queue */
+	private List<ExternalEvent> events;
 	/** Error messages */
 	private static final String timeError = "Start time must be lower than end time of contact";
 	private static final String rangeHostError = "Host1 must be lower than Host2 for bidirectional communication";
@@ -49,7 +51,6 @@ public class CPEventsReader extends StandardEventsReader {
 	 *            superclass constructor**
 	 */
 	public CPEventsReader(File eventsFile) {
-		super(eventsFile);
 		try {
 			this.reader = new BufferedReader(new FileReader(eventsFile));
 		} catch (FileNotFoundException e) {
@@ -65,7 +66,7 @@ public class CPEventsReader extends StandardEventsReader {
 	 * in ONE.
 	 */
 	public List<ExternalEvent> readEvents(int nrof) {
-		ArrayList<ExternalEvent> events = new ArrayList<ExternalEvent>(nrof);
+		this.events = new ArrayList<ExternalEvent>(nrof);
 		String startTimeStr_cont1, startTimeStr_cont2;
 		String endTimeStr_cont1, endTimeStr_cont2;
 		String host1Addr_cont1, host1Addr_cont2;
@@ -190,25 +191,21 @@ public class CPEventsReader extends StandardEventsReader {
 					 * principal control, if it isn't right, it will throws an
 					 * exception
 					 */
-					if (startTime_cont1 != startTime_cont2)
-						throw new IllegalArgumentException("No right start time: contact plan error");
-
-					if (endTime_cont1 != endTime_cont2)
-						throw new IllegalArgumentException("No right end time: contact plan error");
-
 					if ((host1_cont1 != host2_cont2) || (host2_cont1 != host1_cont2))
 						throw new IllegalArgumentException("No right order: contact plan error");
 
-					if (transmitSpeed_cont1 != transmitSpeed_cont2)
-						throw new IllegalArgumentException("No right speed: contact plan error");
-
-					events.add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
-							true, startTime_cont1, transmitSpeed_cont1));
-					events.add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
-							false, endTime_cont1, transmitSpeed_cont1));
-
+					add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
+							true, startTime_cont1, transmitSpeed_cont1, transmitSpeed_cont2));
+					
+					add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
+							false, endTime_cont1, transmitSpeed_cont1, transmitSpeed_cont2));
+					
+					add(new CPConnectionEvent(host2_cont1, host1_cont1, String.valueOf(transmitSpeed_cont1),
+							true, startTime_cont2, transmitSpeed_cont2, transmitSpeed_cont1));
+					
+					add(new CPConnectionEvent(host2_cont1, host1_cont1, String.valueOf(transmitSpeed_cont1),
+							false, endTime_cont2, transmitSpeed_cont2, transmitSpeed_cont1));
 				}
-
 			}
 		} catch (IOException e) {
 			throw new SimError("Reading from external file failed!");
@@ -221,10 +218,17 @@ public class CPEventsReader extends StandardEventsReader {
 		if ( range_is_present == 0 && stk != null )
 			throw new IllegalArgumentException("expected at least one \"a range\": contact plan error");
 
-		return events;
+		return this.events;
 	}
-
-	@Override
+	
+	private void add(ExternalEvent e) {
+		int i;
+		for(i=0; i<events.size(); i++) {
+			if(e.getTime() < events.get(i).getTime()) break;
+		}
+		events.add(i, e);
+	}
+	
 	public void close() {
 		try {
 			this.reader.close();
