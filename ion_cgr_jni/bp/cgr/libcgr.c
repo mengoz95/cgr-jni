@@ -268,6 +268,7 @@ static int	getApplicableRange(IonCXref *contact, unsigned int *owlt)
 
 	if (contact->discovered || contact->confidence < 1.0)
 	{
+		*owlt = 0; /* MM added to cope with opportunistic contact*/
 		return 0;	/*	Physically adjacent nodes.	*/
 	}
 
@@ -324,7 +325,7 @@ static int	computeDistanceToTerminus(IonCXref *rootContact,
 	PsmAddress	elt;
 	IonCXref	*contact;
 	CgrContactNote	*work;
-	unsigned int	owlt;
+	unsigned int	owlt = 0; /* MM */
 	unsigned int	owltMargin;
 	time_t		transmitTime;
 	time_t		arrivalTime;
