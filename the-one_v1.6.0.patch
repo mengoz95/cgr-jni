@@ -51,15 +51,15 @@ diff -ruN src/input/EventQueueHandler.java src/input/EventQueueHandler.java
  				int preload = 0;
  				String path = "";
  				if (s.contains(PRELOAD_SETTING)) {
-@@ -72,7 +72,7 @@
- 				path = s.getSetting(PATH_SETTING);
+@@ -73,7 +73,7 @@
  
  				queues.add(new ExternalEventsQueue(path, preload));
--			}
-+			}*/
- 			else if (s.contains(CLASS_SETTING)) { // event generator class
+ 			}
+-			else if (s.contains(CLASS_SETTING)) { // event generator class
++			else*/ if (s.contains(CLASS_SETTING)) { // event generator class
  				String className = CLASS_PACKAGE + "." +
  					s.getSetting(CLASS_SETTING);
+ 				EventQueue eq = (EventQueue)s.createIntializedObject(className);
 diff -ruN src/report/MessageStatsReport.java src/report/MessageStatsReport.java
 --- src/report/MessageStatsReport.java	2017-04-17 12:30:39.000000000 +0200
 +++ src/report/MessageStatsReport.java	2017-09-07 17:15:24.603573000 +0200
