@@ -379,6 +379,8 @@ typedef struct
 	Object		proxNodeEid;	/*	An SDR string		*/
 	Object		destDuctName;	/*	An SDR string		*/
 	time_t		enqueueTime;	/*	When queued for xmit.	*/
+	int *path;
+	int pathLen;
 } Bundle;
 
 #define COS_FLAGS(bundleProcFlags)	((bundleProcFlags >> 7) & 0x7f)
