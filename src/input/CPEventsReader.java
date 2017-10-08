@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -81,7 +82,8 @@ public class CPEventsReader  implements ExternalEventsReader{
 		String line, letter, action;
 		StringTokenizer stk = null;
 		int range_is_present = 0;
-
+		boolean sim;
+		
 		try {
 			while ((line = this.reader.readLine()) != null) {
 				/**
@@ -183,7 +185,7 @@ public class CPEventsReader  implements ExternalEventsReader{
 						transmitSpeed_cont2 = Integer.parseInt(transmitSpeedStr_cont2);
 						if (transmitSpeed_cont2 < 0)
 							throw new IllegalArgumentException("TransmitSpeed must be higher than zero");
-					} else {
+					}else {
 						throw new IllegalArgumentException("Expected second contact");
 					}
 
@@ -193,18 +195,19 @@ public class CPEventsReader  implements ExternalEventsReader{
 					 */
 					if ((host1_cont1 != host2_cont2) || (host2_cont1 != host1_cont2))
 						throw new IllegalArgumentException("No right order: contact plan error");
-
-					add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
-							true, startTime_cont1, transmitSpeed_cont1, transmitSpeed_cont2));
+					sim = startTime_cont1 == startTime_cont2 && endTime_cont1 == endTime_cont2 &&
+							 transmitSpeed_cont1 == transmitSpeed_cont2;
+					events.add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
+							true, startTime_cont1, transmitSpeed_cont1, sim));
 					
-					add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
-							false, endTime_cont1, transmitSpeed_cont1, transmitSpeed_cont2));
+					events.add(new CPConnectionEvent(host1_cont1, host2_cont1, String.valueOf(transmitSpeed_cont1),
+							false, endTime_cont1, transmitSpeed_cont1, sim));
 					
-					add(new CPConnectionEvent(host2_cont1, host1_cont1, String.valueOf(transmitSpeed_cont1),
-							true, startTime_cont2, transmitSpeed_cont2, transmitSpeed_cont1));
+					events.add(new CPConnectionEvent(host2_cont1, host1_cont1, String.valueOf(transmitSpeed_cont1),
+							true, startTime_cont2, transmitSpeed_cont2, sim));
 					
-					add(new CPConnectionEvent(host2_cont1, host1_cont1, String.valueOf(transmitSpeed_cont1),
-							false, endTime_cont2, transmitSpeed_cont2, transmitSpeed_cont1));
+					events.add(new CPConnectionEvent(host2_cont1, host1_cont1, String.valueOf(transmitSpeed_cont1),
+							false, endTime_cont2, transmitSpeed_cont2, sim));					
 				}
 			}
 		} catch (IOException e) {
@@ -218,15 +221,15 @@ public class CPEventsReader  implements ExternalEventsReader{
 		if ( range_is_present == 0 && stk != null )
 			throw new IllegalArgumentException("expected at least one \"a range\": contact plan error");
 
+		events.sort(new Comparator<ExternalEvent>() {
+			@Override
+			public int compare(ExternalEvent e1, ExternalEvent e2) {
+				if(e1.getTime() > e2.getTime()) return 1;
+				return -1;
+			}
+		});
+		
 		return this.events;
-	}
-	
-	private void add(ExternalEvent e) {
-		int i;
-		for(i=0; i<events.size(); i++) {
-			if(e.getTime() < events.get(i).getTime()) break;
-		}
-		events.add(i, e);
 	}
 	
 	public void close() {

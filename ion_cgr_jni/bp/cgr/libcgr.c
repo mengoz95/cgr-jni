@@ -2244,7 +2244,7 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 				return -1;
 			}
 		}
-		*/s
+		*/
 	}
 
 	/*	Insert into the excludedNodes list all neighbors that

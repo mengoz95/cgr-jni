@@ -34,7 +34,7 @@ diff -ruN src/core/NetworkInterface.java src/core/NetworkInterface.java
  			". Connections: " +	this.connections;
  	}
 +	
-+	public void setTransmissionSpeed(int transmitSpeed) {
++	public void setTransmitSpeed(int transmitSpeed) {
 +		this.transmitSpeed = transmitSpeed;
 +	}
  

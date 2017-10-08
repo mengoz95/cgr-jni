@@ -5,7 +5,9 @@
 package input;
 
 import core.DTNHost;
+import core.SimError;
 import core.World;
+import interfaces.SimpleAsymmetricInterface;
 
 /**
  * Class used to define a specific ConnectionEvent, made by the ContactPlan
@@ -27,20 +29,22 @@ public class CPConnectionEvent extends ConnectionEvent {
 	 * Speed of the connection between two nodes. It's simply the datarate used
 	 * by the network interface
 	 */
-	private int[] speed = new int[2];
+	private int speed;
+	private boolean sim;
 
-	public CPConnectionEvent(int from, int to, String interf, boolean up, double time, int txSpeed, int rxSpeed) {
+	public CPConnectionEvent(int from, int to, String interf, boolean up, double time, int txSpeed, boolean sim) {
 		super(from, to, interf, up, time);
-		this.speed[0] = txSpeed;
-		this.speed[1] = rxSpeed;
+		this.speed = txSpeed;
+		this.sim = sim;
 	}
 
 	@Override
 	public void processEvent(World world) {
+		
 		DTNHost from =  world.getNodeByAddress(this.fromAddr);
 		DTNHost to =  world.getNodeByAddress(this.toAddr);
-		from.getInterface(1).setTransmitSpeed(this.speed[0]);
-		to.getInterface(1).setTransmitSpeed(this.speed[1]);
+		if(!(sim || from.getInterface(1) instanceof SimpleAsymmetricInterface)) throw new SimError("First Interface must be AsymmtericInterface");
+		from.getInterface(1).setTransmitSpeed(this.speed);
 		from.forceConnection(to, null, this.isUp);
 	}
 
