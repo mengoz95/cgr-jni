@@ -2232,7 +2232,7 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 		}
 		/* [MM] added */
 		//printf("%u: %u -> %u Not forward to: %u\n", getOwnNodeNbr(), bundle->clDossier.senderNodeNbr, bundle->destination.c.nodeNbr, bundle->clDossier.senderNodeNbr);
-
+		/*
 		for(int i=1; i<bundle->pathLen; i++)
 		{
 			//printf("%u: %u -> %u Not forward to: %u\n", getOwnNodeNbr(), bundle->clDossier.senderNodeNbr, bundle->destination.c.nodeNbr, bundle->path[i]);
@@ -2244,7 +2244,7 @@ static int 	cgrForward(Bundle *bundle, Object bundleObj,
 				return -1;
 			}
 		}
-
+		*/s
 	}
 
 	/*	Insert into the excludedNodes list all neighbors that

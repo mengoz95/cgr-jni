@@ -495,13 +495,12 @@ void ion_bundle(Bundle * bundle, jobject message)
 	bundle->dictionaryLength = 0;
 	bundle->extensionsLength[PRE_PAYLOAD] = 0;
 	bundle->extensionsLength[POST_PAYLOAD] = 0;
-	bundle->xmitCopiesCount = 0; /* [MM] added*/
 #ifdef OPPORTUNISTIC_ROUTING
 
 	/* [MM] added */
-	bundle->pathLen = getMessagePathCount(message);
-	bundle->path = (int*) malloc(sizeof(int)*bundle->pathLen);
-	getMessagePath(message, bundle->path);
+	//bundle->pathLen = getMessagePathCount(message);
+	//bundle->path = (int*) malloc(sizeof(int)*bundle->pathLen);
+	//getMessagePath(message, bundle->path);
 	/*for(int i=0; i<bundle->pathLen; i++){
 		printf("%d\n", bundle->path[i]);
 	}*/
