@@ -202,7 +202,7 @@ public class OpportunisticContactGraphRouter extends ContactGraphRouter {
 	 */
 	private void contactAquired(Connection con)
 	{
-		Libocgr.contactDiscoveryAquired(getHost().getAddress(), 
+		if(!con.getOtherNode(getHost()).equals(this.getHost())) Libocgr.contactDiscoveryAquired(getHost().getAddress(), 
 				con.getOtherNode(getHost()).getAddress(), (int)con.getSpeed());
 	}
 
