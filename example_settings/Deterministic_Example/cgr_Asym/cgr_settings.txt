@@ -13,14 +13,14 @@ Group1.groupID = h
 Group1.nrofInterfaces = 1
 #Group1.interface1 = AsymmetricInterface
 
-ContactGraphRouter.ContactPlanPath = /home/mattia/eclipse-workspace/cgr-jni-Merge/simulations/my_test/cgr/contact_plan.txt
-ContactGraphRouter.debug = true
+ContactGraphRouter.ContactPlanPath = example_settings/Deterministic_Example/cgr_Asym/contact_plan.txt
+ContactGraphRouter.debug = false
 Events.nrof = 2
 Events1.class = CPExternalEventsQueue
-Events1.filePath = /home/mattia/eclipse-workspace/cgr-jni-Merge/simulations/my_test/cgr/contact_plan.txt
+Events1.filePath = example_settings/Deterministic_Example/cgr_Asym/contact_plan.txt
 
 Events2.class = DMExternalEventsQueue
-Events2.filePath = /home/mattia/eclipse-workspace/cgr-jni-Merge/simulations/my_test/cgr/message_plan.txt
+Events2.filePath = example_settings/Deterministic_Example/cgr_Asym/message_plan.txt
 Events2.prefix = D
 
 #Reports for priority messages

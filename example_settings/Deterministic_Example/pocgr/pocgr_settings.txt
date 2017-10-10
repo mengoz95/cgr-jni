@@ -8,14 +8,14 @@ Group1.groupID = h
 OpportunisticContactGraphRouter.epidemicDropBack = false
 OpportunisticContactGraphRouter.debug = false
 
-ContactGraphRouter.ContactPlanPath = /home/mattia/eclipse-workspace/cgr-jni-Merge/simulations/my_test/pocgr/contact_plan.txt
+ContactGraphRouter.ContactPlanPath = example_settings/Deterministic_Example/pocgr/contact_plan.txt
 
 Events.nrof = 2
 Events1.class = CPExternalEventsQueue
-Events1.filePath = /home/mattia/eclipse-workspace/cgr-jni-Merge/simulations/my_test/pocgr/contact_plan.txt
+Events1.filePath = example_settings/Deterministic_Example/pocgr/contact_plan.txt
 
 Events2.class = DMExternalEventsQueue
-Events2.filePath = /home/mattia/eclipse-workspace/cgr-jni-Merge/simulations/my_test/pocgr/message_plan.txt
+Events2.filePath = example_settings/Deterministic_Example/pocgr/message_plan.txt
 Events2.size = 1k
 Events2.priority = 1
 
