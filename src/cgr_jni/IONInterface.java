@@ -32,7 +32,7 @@ public class IONInterface {
 	//// STATIC METHODS ACCESSED FROM JNI /////
 
 	static long getMessageSenderNbr(Message message) {
-		return message.getFrom().getAddress();
+		return message.getHops().get(message.getHops().size()-1).getAddress();
 	}
 
 	static long getMessageDestinationNbr(Message message) {
