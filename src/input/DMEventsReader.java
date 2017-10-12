@@ -113,7 +113,6 @@ public class DMEventsReader implements ExternalEventsReader{
 						token = st.nextToken();
 						rateType=token.charAt(token.length()-1);
 						rate = Double.parseDouble(token.substring(0, token.length()-1));
-						rate = 1/rate;
 					}
 					else if(token.charAt(0)=='+') {
 						startTime = Double.parseDouble(token.substring(1));
@@ -122,8 +121,14 @@ public class DMEventsReader implements ExternalEventsReader{
 						throw new IOException("'" + token + "' option doesn't exist");
 					}
 				}
-				if(rateType != 'b') {
-					throw new IOException("Not implemented rate type");
+				switch(rateType) {
+					case 'k' : rate = payload/rate/1000;
+						break;
+					case 'M' : rate = payload/rate/1000000;
+						break;
+					case 'b' : rate = 1/rate;
+						break;
+					default : throw new IOException("Not implemented rate type");
 				}
 				if(dest<0 || source <0 || rate<0) {
 					throw new IOException("'destination', 'source' and 'rate' are mandatory options");
